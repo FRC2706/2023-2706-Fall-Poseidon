@@ -136,13 +136,6 @@ public class SwerveSubsystem extends SubsystemBase {
     return m_odometry.getPoseMeters().getRotation();
   }
 
-  public void resetHeading(Rotation2d newHeading) {
-    resetOdometry(
-        new Pose2d(
-            getPose().getTranslation(),
-            newHeading));
-  }
-
   @Override
   public void periodic() {
     m_odometry.update(getYaw(), getPositions());
