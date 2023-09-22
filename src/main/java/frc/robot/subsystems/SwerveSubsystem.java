@@ -1,6 +1,6 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.sensors.Pigeon2;
+import com.ctre.phoenix.sensors.PigeonIMU;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -10,31 +10,29 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class Swerve extends SubsystemBase {
-  private final Pigeon2 gyro;
+public class SwerveSubsystem extends SubsystemBase {
+  private final PigeonIMU m_pigeon;
 
-  private SwerveDriveOdometry swerveOdometry;
-  private SwerveModule[] mSwerveMods;
+  private SwerveDriveOdometry m_odometry;
+  private SwerveModule[] m_swerveModules;
 
-  private Field2d field;
+  public SwerveSubsystem() {
+    m_pigeon = new PigeonIMU(Constants.Swerve.pigeonID);
+    m_pigeon.configFactoryDefault();
 
-  public Swerve() {
-    gyro = new Pigeon2(Constants.Swerve.pigeonID);
-    gyro.configFactoryDefault();
-
-    mSwerveMods = new SwerveModule[] {
+    m_swerveModules = new SwerveModule[] {
         new SwerveModule(0, Constants.Swerve.Mod0.constants),
         new SwerveModule(1, Constants.Swerve.Mod1.constants),
         new SwerveModule(2, Constants.Swerve.Mod2.constants),
         new SwerveModule(3, Constants.Swerve.Mod3.constants)
     };
 
-    swerveOdometry = new SwerveDriveOdometry(
+    m_odometry = new SwerveDriveOdometry(
         Constants.Swerve.swerveKinematics,
         getYaw(),
         getPositions(),
@@ -50,26 +48,25 @@ public class Swerve extends SubsystemBase {
             : new ChassisSpeeds(translation.getX(), translation.getY(), rotation));
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
 
-    for (SwerveModule mod : mSwerveMods) {
+    for (SwerveModule mod : m_swerveModules) {
       mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
     }
   }
 
-  /* Used by SwerveControllerCommand in Auto */
   public void setModuleStates(SwerveModuleState[] desiredStates) {
     SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.maxSpeed);
 
-    for (SwerveModule mod : mSwerveMods) {
+    for (SwerveModule mod : m_swerveModules) {
       mod.setDesiredState(desiredStates[mod.moduleNumber], false);
     }
   }
 
   public Pose2d getPose() {
-    return swerveOdometry.getPoseMeters();
+    return m_odometry.getPoseMeters();
   }
 
   public void resetOdometry(Pose2d pose) {
-    swerveOdometry.resetPosition(
+    m_odometry.resetPosition(
         getYaw(),
         getPositions(),
         pose);
@@ -77,7 +74,7 @@ public class Swerve extends SubsystemBase {
 
   public SwerveModuleState[] getStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
-    for (SwerveModule mod : mSwerveMods) {
+    for (SwerveModule mod : m_swerveModules) {
       states[mod.moduleNumber] = mod.getState();
     }
     return states;
@@ -85,24 +82,62 @@ public class Swerve extends SubsystemBase {
 
   public SwerveModulePosition[] getPositions() {
     SwerveModulePosition[] positions = new SwerveModulePosition[4];
-    for (SwerveModule mod : mSwerveMods) {
+    for (SwerveModule mod : m_swerveModules) {
       positions[mod.moduleNumber] = mod.getPosition();
     }
     return positions;
   }
 
-  public void zeroGyro() {
-    gyro.setYaw(0);
+  /**
+   * Returns the heading of the robot.
+   * 
+   * This is private because only the odoemtry get's the raw gyro value.
+   * Everything else get's the gyro value from odometry since it does an
+   * offset.
+   *
+   * @return the robot's heading as a Rotation2d, from -180 to 180
+   */
+  private Rotation2d getYaw() {
+    return Rotation2d.fromDegrees(m_pigeon.getFusedHeading());
   }
 
-  public Rotation2d getYaw() {
-    return (Constants.Swerve.invertGyro)
-        ? Rotation2d.fromDegrees(360 - gyro.getYaw())
-        : Rotation2d.fromDegrees(gyro.getYaw());
+  /**
+   * Returns the heading of the robot.
+   * 
+   * Uses this method for heading. Odometry does an offset to ensure this has the
+   * correct origin.
+   *
+   * @return the robot's heading in degrees, from -180 to 180
+   */
+  public Rotation2d getHeading() {
+    return m_odometry.getPoseMeters().getRotation();
+  }
+
+  public void resetHeading(Rotation2d newHeading) {
+    resetOdometry(
+        new Pose2d(
+            getPose().getTranslation(),
+            newHeading));
   }
 
   @Override
   public void periodic() {
-    swerveOdometry.update(getYaw(), getPositions());
+    m_odometry.update(getYaw(), getPositions());
+  }
+
+  /**
+   * Returns a command that resets the heading to the given heading when scheduled.
+   * 
+   * Maintains the current X and Y value of odometry.
+   * 
+   * @param newHeading Desired heading to reset to.
+   * @return A command to reset odometry
+   */
+  public CommandBase getResetHeadingCommand(Rotation2d newHeading) {
+    return Commands.runOnce(
+        () -> resetOdometry(
+            new Pose2d(
+                getPose().getTranslation(),
+                newHeading)));
   }
 }
