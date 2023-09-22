@@ -14,12 +14,11 @@ import frc.robot.subsystems.SwerveSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
- * Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in
- * the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of
- * the robot (including
- * subsystems, commands, and button mappings) should be declared here.
+ * Command-based is a "declarative" paradigm, very little robot logic
+ * should actually be handled in the {@link Robot} periodic methods
+ * (other than the scheduler calls). Instead, the structure of the robot
+ * (including subsystems, commands, and button mappings) should be declared
+ * here.
  */
 public class RobotContainer {
   /* Controllers */
@@ -30,22 +29,20 @@ public class RobotContainer {
   private final int strafeAxis = XboxController.Axis.kLeftX.value;
   private final int rotationAxis = XboxController.Axis.kRightX.value;
 
-  /* Subsystems */
-  private final SwerveSubsystem s_Swerve = new SwerveSubsystem();
+  /* Create Subsystems in a specific order */
+  private SwerveSubsystem swerve = SwerveSubsystem.getInstance();
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
-    s_Swerve.setDefaultCommand(
+    // Setup default commands
+    swerve.setDefaultCommand(
         new TeleopSwerveCommand(
-            s_Swerve,
+            swerve,
             () -> -driver.getRawAxis(translationAxis),
             () -> -driver.getRawAxis(strafeAxis),
-            () -> -driver.getRawAxis(rotationAxis),
-            () -> {
-              return false;
-            }));
+            () -> -driver.getRawAxis(rotationAxis)));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -57,7 +54,7 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     /* Driver Buttons */
-    driver.back().onTrue(s_Swerve.getResetHeadingCommand(Rotation2d.fromDegrees(0)));
+    driver.back().onTrue(swerve.getResetHeadingCommand(Rotation2d.fromDegrees(0)));
   }
 
   /**

@@ -4,7 +4,6 @@ import com.ctre.phoenix.sensors.PigeonIMU;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
@@ -16,37 +15,61 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class SwerveSubsystem extends SubsystemBase {
+  private static SwerveSubsystem INSTANCE;
+
   private final PigeonIMU m_pigeon;
 
   private SwerveDriveOdometry m_odometry;
   private SwerveModule[] m_swerveModules;
 
-  public SwerveSubsystem() {
-    m_pigeon = new PigeonIMU(Constants.Swerve.pigeonID);
+  public static SwerveSubsystem getInstance() {
+    if (INSTANCE == null) {
+      INSTANCE = new SwerveSubsystem();
+    }
+    return INSTANCE;
+  }
+
+  private SwerveSubsystem() {
+    m_pigeon = new PigeonIMU(Constants.CanID.PIGEON);
     m_pigeon.configFactoryDefault();
 
     m_swerveModules = new SwerveModule[] {
-        new SwerveModule(0, Constants.Swerve.Mod0.constants),
-        new SwerveModule(1, Constants.Swerve.Mod1.constants),
-        new SwerveModule(2, Constants.Swerve.Mod2.constants),
-        new SwerveModule(3, Constants.Swerve.Mod3.constants)
+        new SwerveModule(0, Constants.Swerve.Mod0.CONSTANTS),
+        new SwerveModule(1, Constants.Swerve.Mod1.CONSTANTS),
+        new SwerveModule(2, Constants.Swerve.Mod2.CONSTANTS),
+        new SwerveModule(3, Constants.Swerve.Mod3.CONSTANTS)
     };
 
     m_odometry = new SwerveDriveOdometry(
-        Constants.Swerve.swerveKinematics,
+        Constants.Swerve.SWERVE_KINEMATICS,
         getYaw(),
         getPositions(),
         new Pose2d());
   }
 
-  public void drive(
-      Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
-    SwerveModuleState[] swerveModuleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(
-        fieldRelative
-            ? ChassisSpeeds.fromFieldRelativeSpeeds(
-                translation.getX(), translation.getY(), rotation, getYaw())
-            : new ChassisSpeeds(translation.getX(), translation.getY(), rotation));
-    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
+  public void stopMotors() {
+    for (SwerveModule mod : m_swerveModules) {
+      mod.stopMotors();
+    }
+  }
+
+  public void drive(double xSpeed, double ySpeed, double rotSpeed, boolean fieldRelative, boolean isOpenLoop) {
+    SwerveModuleState[] swerveModuleStates;
+    if (fieldRelative) {
+      swerveModuleStates = Constants.Swerve.SWERVE_KINEMATICS.toSwerveModuleStates(
+          ChassisSpeeds.fromFieldRelativeSpeeds(
+              xSpeed,
+              ySpeed,
+              rotSpeed,
+              getHeading()));
+    } else {
+      swerveModuleStates = Constants.Swerve.SWERVE_KINEMATICS.toSwerveModuleStates(
+          new ChassisSpeeds(
+              xSpeed,
+              ySpeed,
+              rotSpeed));
+    }
+    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.MAX_ATTAINABLE_SPEED);
 
     for (SwerveModule mod : m_swerveModules) {
       mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
@@ -54,7 +77,7 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public void setModuleStates(SwerveModuleState[] desiredStates) {
-    SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.maxSpeed);
+    SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.MAX_ATTAINABLE_SPEED);
 
     for (SwerveModule mod : m_swerveModules) {
       mod.setDesiredState(desiredStates[mod.moduleNumber], false);
@@ -126,7 +149,8 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   /**
-   * Returns a command that resets the heading to the given heading when scheduled.
+   * Returns a command that resets the heading to the given heading when
+   * scheduled.
    * 
    * Maintains the current X and Y value of odometry.
    * 
