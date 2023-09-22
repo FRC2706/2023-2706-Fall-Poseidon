@@ -8,7 +8,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 import frc.lib.lib3512.config.SwerveModuleConstants;
 
-public final class Constants {
+public final class Config {
   public static final class CanID {
     public static final int PIGEON = 6;
 

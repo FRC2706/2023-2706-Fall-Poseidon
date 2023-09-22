@@ -17,7 +17,7 @@ import frc.lib.lib3512.util.CANCoderUtil;
 import frc.lib.lib3512.util.CANCoderUtil.CCUsage;
 import frc.lib.lib3512.util.CANSparkMaxUtil;
 import frc.lib.lib3512.util.CANSparkMaxUtil.Usage;
-import frc.robot.Constants;
+import frc.robot.Config;
 import frc.robot.Robot;
 
 public class SwerveModule {
@@ -37,7 +37,7 @@ public class SwerveModule {
 
   private final SimpleMotorFeedforward feedforward =
       new SimpleMotorFeedforward(
-          Constants.Swerve.DRIVE_S, Constants.Swerve.DRIVE_V, Constants.Swerve.DRIVE_A);
+          Config.Swerve.DRIVE_S, Config.Swerve.DRIVE_V, Config.Swerve.DRIVE_A);
 
   public SwerveModule(int moduleNumber, SwerveModuleConstants moduleConstants) {
     this.moduleNumber = moduleNumber;
@@ -90,15 +90,15 @@ public class SwerveModule {
   private void configSteerMotor() {
     steerMotor.restoreFactoryDefaults();
     CANSparkMaxUtil.setCANSparkMaxBusUsage(steerMotor, Usage.kPositionOnly);
-    steerMotor.setSmartCurrentLimit(Constants.Swerve.STEER_CURRENT_LIMIT);
-    steerMotor.setInverted(Constants.Swerve.STEER_INVERT);
-    steerMotor.setIdleMode(Constants.Swerve.STEER_IDLE_MODE);
-    integratedSteerEncoder.setPositionConversionFactor(Constants.Swerve.STEER_POS_CONVERSION);
-    steerController.setP(Constants.Swerve.STEER_P);
-    steerController.setI(Constants.Swerve.STEER_I);
-    steerController.setD(Constants.Swerve.STEER_D);
-    steerController.setFF(Constants.Swerve.STEER_FF);
-    steerMotor.enableVoltageCompensation(Constants.Swerve.VOLTAGE_COMPENSATION);
+    steerMotor.setSmartCurrentLimit(Config.Swerve.STEER_CURRENT_LIMIT);
+    steerMotor.setInverted(Config.Swerve.STEER_INVERT);
+    steerMotor.setIdleMode(Config.Swerve.STEER_IDLE_MODE);
+    integratedSteerEncoder.setPositionConversionFactor(Config.Swerve.STEER_POS_CONVERSION);
+    steerController.setP(Config.Swerve.STEER_P);
+    steerController.setI(Config.Swerve.STEER_I);
+    steerController.setD(Config.Swerve.STEER_D);
+    steerController.setFF(Config.Swerve.STEER_FF);
+    steerMotor.enableVoltageCompensation(Config.Swerve.VOLTAGE_COMPENSATION);
     steerMotor.burnFlash();
     resetToAbsolute();
   }
@@ -106,23 +106,23 @@ public class SwerveModule {
   private void configDriveMotor() {
     driveMotor.restoreFactoryDefaults();
     CANSparkMaxUtil.setCANSparkMaxBusUsage(driveMotor, Usage.kAll);
-    driveMotor.setSmartCurrentLimit(Constants.Swerve.DRIVE_CURRENT_LIMIT);
-    driveMotor.setInverted(Constants.Swerve.DRIVE_INVERT);
-    driveMotor.setIdleMode(Constants.Swerve.DRIVE_IDLE_MODE);
-    driveEncoder.setVelocityConversionFactor(Constants.Swerve.DRIVE_VEL_CONVERSION);
-    driveEncoder.setPositionConversionFactor(Constants.Swerve.DRIVE_POS_CONVERSION);
-    driveController.setP(Constants.Swerve.DRIVE_P);
-    driveController.setI(Constants.Swerve.DRIVE_I);
-    driveController.setD(Constants.Swerve.DRIVE_D);
-    driveController.setFF(Constants.Swerve.DRIVE_FF);
-    driveMotor.enableVoltageCompensation(Constants.Swerve.VOLTAGE_COMPENSATION);
+    driveMotor.setSmartCurrentLimit(Config.Swerve.DRIVE_CURRENT_LIMIT);
+    driveMotor.setInverted(Config.Swerve.DRIVE_INVERT);
+    driveMotor.setIdleMode(Config.Swerve.DRIVE_IDLE_MODE);
+    driveEncoder.setVelocityConversionFactor(Config.Swerve.DRIVE_VEL_CONVERSION);
+    driveEncoder.setPositionConversionFactor(Config.Swerve.DRIVE_POS_CONVERSION);
+    driveController.setP(Config.Swerve.DRIVE_P);
+    driveController.setI(Config.Swerve.DRIVE_I);
+    driveController.setD(Config.Swerve.DRIVE_D);
+    driveController.setFF(Config.Swerve.DRIVE_FF);
+    driveMotor.enableVoltageCompensation(Config.Swerve.VOLTAGE_COMPENSATION);
     driveMotor.burnFlash();
     driveEncoder.setPosition(0.0);
   }
 
   private void setSpeed(SwerveModuleState desiredState, boolean isOpenLoop) {
     if (isOpenLoop) {
-      double percentOutput = desiredState.speedMetersPerSecond / Constants.Swerve.MAX_ATTAINABLE_SPEED;
+      double percentOutput = desiredState.speedMetersPerSecond / Config.Swerve.MAX_ATTAINABLE_SPEED;
       driveMotor.set(percentOutput);
     } else {
       driveController.setReference(
@@ -136,7 +136,7 @@ public class SwerveModule {
   private void setSteer(SwerveModuleState desiredState) {
     // Prevent rotating module if speed is less then 1%. Prevents jittering.
     Rotation2d angle =
-        (Math.abs(desiredState.speedMetersPerSecond) <= (Constants.Swerve.MAX_ATTAINABLE_SPEED * 0.01))
+        (Math.abs(desiredState.speedMetersPerSecond) <= (Config.Swerve.MAX_ATTAINABLE_SPEED * 0.01))
             ? lastAngle
             : desiredState.angle;
 

@@ -12,7 +12,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import frc.robot.Config;
 
 public class SwerveSubsystem extends SubsystemBase {
   private static SwerveSubsystem INSTANCE;
@@ -30,18 +30,18 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   private SwerveSubsystem() {
-    m_pigeon = new PigeonIMU(Constants.CanID.PIGEON);
+    m_pigeon = new PigeonIMU(Config.CanID.PIGEON);
     m_pigeon.configFactoryDefault();
 
     m_swerveModules = new SwerveModule[] {
-        new SwerveModule(0, Constants.Swerve.Mod0.CONSTANTS),
-        new SwerveModule(1, Constants.Swerve.Mod1.CONSTANTS),
-        new SwerveModule(2, Constants.Swerve.Mod2.CONSTANTS),
-        new SwerveModule(3, Constants.Swerve.Mod3.CONSTANTS)
+        new SwerveModule(0, Config.Swerve.Mod0.CONSTANTS),
+        new SwerveModule(1, Config.Swerve.Mod1.CONSTANTS),
+        new SwerveModule(2, Config.Swerve.Mod2.CONSTANTS),
+        new SwerveModule(3, Config.Swerve.Mod3.CONSTANTS)
     };
 
     m_odometry = new SwerveDriveOdometry(
-        Constants.Swerve.SWERVE_KINEMATICS,
+        Config.Swerve.SWERVE_KINEMATICS,
         getYaw(),
         getPositions(),
         new Pose2d());
@@ -56,20 +56,20 @@ public class SwerveSubsystem extends SubsystemBase {
   public void drive(double xSpeed, double ySpeed, double rotSpeed, boolean fieldRelative, boolean isOpenLoop) {
     SwerveModuleState[] swerveModuleStates;
     if (fieldRelative) {
-      swerveModuleStates = Constants.Swerve.SWERVE_KINEMATICS.toSwerveModuleStates(
+      swerveModuleStates = Config.Swerve.SWERVE_KINEMATICS.toSwerveModuleStates(
           ChassisSpeeds.fromFieldRelativeSpeeds(
               xSpeed,
               ySpeed,
               rotSpeed,
               getHeading()));
     } else {
-      swerveModuleStates = Constants.Swerve.SWERVE_KINEMATICS.toSwerveModuleStates(
+      swerveModuleStates = Config.Swerve.SWERVE_KINEMATICS.toSwerveModuleStates(
           new ChassisSpeeds(
               xSpeed,
               ySpeed,
               rotSpeed));
     }
-    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.MAX_ATTAINABLE_SPEED);
+    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Config.Swerve.MAX_ATTAINABLE_SPEED);
 
     for (SwerveModule mod : m_swerveModules) {
       mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
@@ -77,7 +77,7 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public void setModuleStates(SwerveModuleState[] desiredStates) {
-    SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.MAX_ATTAINABLE_SPEED);
+    SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Config.Swerve.MAX_ATTAINABLE_SPEED);
 
     for (SwerveModule mod : m_swerveModules) {
       mod.setDesiredState(desiredStates[mod.moduleNumber], false);

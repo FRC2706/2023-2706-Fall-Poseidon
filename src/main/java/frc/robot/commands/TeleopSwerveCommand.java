@@ -4,7 +4,7 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.Constants;
+import frc.robot.Config;
 import frc.robot.subsystems.SwerveSubsystem;
 
 public class TeleopSwerveCommand extends CommandBase {
@@ -29,13 +29,13 @@ public class TeleopSwerveCommand extends CommandBase {
   @Override
   public void execute() {
     /* Get Values, Deadband */
-    double translationVal = MathUtil.applyDeadband(translationSup.getAsDouble(), Constants.Swerve.JOYSTICK_DEADBAND);
-    double strafeVal = MathUtil.applyDeadband(strafeSup.getAsDouble(), Constants.Swerve.JOYSTICK_DEADBAND);
-    double rotationVal = MathUtil.applyDeadband(rotationSup.getAsDouble(), Constants.Swerve.JOYSTICK_DEADBAND);
+    double translationVal = MathUtil.applyDeadband(translationSup.getAsDouble(), Config.Swerve.JOYSTICK_DEADBAND);
+    double strafeVal = MathUtil.applyDeadband(strafeSup.getAsDouble(), Config.Swerve.JOYSTICK_DEADBAND);
+    double rotationVal = MathUtil.applyDeadband(rotationSup.getAsDouble(), Config.Swerve.JOYSTICK_DEADBAND);
 
-    translationVal *= Constants.Swerve.TELEOP_SPEED;
-    strafeVal *= Constants.Swerve.TELEOP_SPEED;
-    rotationVal *= Constants.Swerve.TELEOP_ANGULAR_SPEED;
+    translationVal *= Config.Swerve.TELEOP_SPEED;
+    strafeVal *= Config.Swerve.TELEOP_SPEED;
+    rotationVal *= Config.Swerve.TELEOP_ANGULAR_SPEED;
 
     /* Drive */
     s_Swerve.drive(
