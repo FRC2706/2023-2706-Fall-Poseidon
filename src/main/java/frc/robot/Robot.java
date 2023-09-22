@@ -4,10 +4,16 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.lib3512.config.CTREConfigs;
+import frc.robot.robotcontainers.ArmBotContainer;
+import frc.robot.robotcontainers.BeetleContainer;
+import frc.robot.robotcontainers.ClutchContainer;
+import frc.robot.robotcontainers.PoseidonContainer;
+import frc.robot.robotcontainers.RobotContainer;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -29,7 +35,41 @@ public class Robot extends TimedRobot {
     ctreConfigs = new CTREConfigs();
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
-    m_robotContainer = new RobotContainer();
+    m_robotContainer = new PoseidonContainer();
+  }
+
+  private void instantiateRobotContainer() {
+    // Instantiate the RobotContainer based on the Robot ID.  This will perform all our button bindings, and put our
+    // autonomous chooser on the dashboard.
+    switch (Config.getRobotId()) {
+      case 0:
+        m_robotContainer = new PoseidonContainer(); break;
+      
+      case 1:
+        m_robotContainer = new ClutchContainer(); break;
+
+      case 2:
+        m_robotContainer = new BeetleContainer(); break;
+
+      // case 3:
+      //   m_robotContainer = new MergonautContainer(); break;
+
+      // case 4:
+      //   m_robotContainer = new MiniSwerveContainer(); break;
+
+      // case 5:
+      //   m_robotContainer = new MiniNeoDiffContainer(); break;
+      
+      case 6:
+        m_robotContainer = new ArmBotContainer(); break;
+
+      default:
+        m_robotContainer = new PoseidonContainer();
+        DriverStation.reportError(
+            String.format("ISSUE WITH CONSTRUCTING THE ROBOT CONTAINER. \n " +
+                          "PoseidonContainer constructed by default. RobotID: %d", Config.getRobotId()), 
+            true);
+    }
   }
 
   /**
@@ -55,7 +95,7 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledPeriodic() {}
 
-  /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
+  /** This autonomous runs the autonomous command selected by your {@link PoseidonContainer} class. */
   @Override
   public void autonomousInit() {
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();

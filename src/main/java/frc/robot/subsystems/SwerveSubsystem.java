@@ -12,6 +12,8 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.lib2706.SubsystemChecker;
+import frc.lib.lib2706.SubsystemChecker.SubsystemType;
 import frc.robot.Config;
 
 public class SwerveSubsystem extends SubsystemBase {
@@ -24,6 +26,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public static SwerveSubsystem getInstance() {
     if (INSTANCE == null) {
+      SubsystemChecker.subsystemConstructed(SubsystemType.SwerveSubsystem);
       INSTANCE = new SwerveSubsystem();
     }
     return INSTANCE;
