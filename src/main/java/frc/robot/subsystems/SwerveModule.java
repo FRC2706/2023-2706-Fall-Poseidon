@@ -18,7 +18,6 @@ import frc.lib.lib3512.util.CANCoderUtil.CCUsage;
 import frc.lib.lib3512.util.CANSparkMaxUtil;
 import frc.lib.lib3512.util.CANSparkMaxUtil.Usage;
 import frc.robot.Config;
-import frc.robot.Robot;
 
 public class SwerveModule {
   public int moduleNumber;
@@ -35,15 +34,14 @@ public class SwerveModule {
   private final SparkMaxPIDController driveController;
   private final SparkMaxPIDController steerController;
 
-  private final SimpleMotorFeedforward feedforward =
-      new SimpleMotorFeedforward(
-          Config.Swerve.DRIVE_S, Config.Swerve.DRIVE_V, Config.Swerve.DRIVE_A);
+  private final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(
+      Config.Swerve.DRIVE_S, Config.Swerve.DRIVE_V, Config.Swerve.DRIVE_A);
 
   /**
    * Construct a SwerveModule to handle a drive and steer Spark Maxes, and a
    * steering cancoder.
    * 
-   * @param moduleNumber Number of the module.
+   * @param moduleNumber    Number of the module.
    * @param moduleConstants Constants for the module.
    */
   public SwerveModule(int moduleNumber, SwerveModuleConstants moduleConstants) {
@@ -73,11 +71,11 @@ public class SwerveModule {
    * Set the desired state (drive vel & steering angle) for the module.
    * 
    * @param desiredState The desired state.
-   * @param isOpenLoop Whether to use open loop or closed loop control.
+   * @param isOpenLoop   Whether to use open loop or closed loop control.
    */
   public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop) {
-    // Custom optimize command, since default WPILib optimize assumes continuous controller which
-    // REV and CTRE are not
+    // Custom optimize command, since default WPILib optimize assumes continuous
+    // controller which REV and CTRE are not
     desiredState = OnboardModuleState.optimize(desiredState, getState().angle);
 
     setSteer(desiredState);
@@ -85,8 +83,8 @@ public class SwerveModule {
   }
 
   /**
-  * Stop the swerve motors until a new instruction comes.
-  */
+   * Stop the swerve motors until a new instruction comes.
+   */
   public void stopMotors() {
     driveMotor.stopMotor();
     steerMotor.stopMotor();
@@ -124,8 +122,10 @@ public class SwerveModule {
     steerController.setD(Config.Swerve.STEER_D);
     steerController.setFF(Config.Swerve.STEER_FF);
     steerMotor.enableVoltageCompensation(Config.Swerve.VOLTAGE_COMPENSATION);
-    steerMotor.burnFlash();
     resetToAbsolute();
+
+    // Run burnFlash after because it blocks the Spark Max temporarily.
+    steerMotor.burnFlash();
   }
 
   /**
@@ -144,15 +144,17 @@ public class SwerveModule {
     driveController.setD(Config.Swerve.DRIVE_D);
     driveController.setFF(Config.Swerve.DRIVE_FF);
     driveMotor.enableVoltageCompensation(Config.Swerve.VOLTAGE_COMPENSATION);
-    driveMotor.burnFlash();
     driveEncoder.setPosition(0.0);
+
+    // Run burnFlash after because it blocks the Spark Max temporarily.
+    driveMotor.burnFlash();
   }
 
   /**
    * Set the desired speed of the drive motor.
    * 
    * @param desiredState The desired state containing the desired speed.
-   * @param isOpenLoop Whether to use open loop or closed loop control.
+   * @param isOpenLoop   Whether to use open loop or closed loop control.
    */
   private void setSpeed(SwerveModuleState desiredState, boolean isOpenLoop) {
     if (isOpenLoop) {
@@ -174,10 +176,9 @@ public class SwerveModule {
    */
   private void setSteer(SwerveModuleState desiredState) {
     // Prevent rotating module if speed is less then 1%. Prevents jittering.
-    Rotation2d angle =
-        (Math.abs(desiredState.speedMetersPerSecond) <= (Config.Swerve.MAX_ATTAINABLE_SPEED * 0.01))
-            ? lastAngle
-            : desiredState.angle;
+    Rotation2d angle = (Math.abs(desiredState.speedMetersPerSecond) <= (Config.Swerve.MAX_ATTAINABLE_SPEED * 0.01))
+        ? lastAngle
+        : desiredState.angle;
 
     steerController.setReference(angle.getDegrees(), ControlType.kPosition);
     lastAngle = angle;
@@ -212,6 +213,7 @@ public class SwerveModule {
 
   /**
    * Get the position (drive pos and steer angle) of the module.
+   * 
    * @return SwerveModulePosition of the module.
    */
   public SwerveModulePosition getPosition() {

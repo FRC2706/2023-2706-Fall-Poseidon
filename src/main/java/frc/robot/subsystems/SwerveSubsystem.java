@@ -71,11 +71,11 @@ public class SwerveSubsystem extends SubsystemBase {
    * Follow WPILib standards for +X, +Y, +rot directions:
    * https://docs.wpilib.org/en/stable/docs/software/advanced-controls/geometry/coordinate-systems.html
    * 
-   * @param xSpeed Speed in the X direction in meters per second.
-   * @param ySpeed Speed in the Y direction in meters per second.
-   * @param rotSpeed Angular Speed in radians per second.
+   * @param xSpeed        Speed in the X direction in meters per second.
+   * @param ySpeed        Speed in the Y direction in meters per second.
+   * @param rotSpeed      Angular Speed in radians per second.
    * @param fieldRelative Whether to be field relative or robot relative.
-   * @param isOpenLoop Whether to be open loop or closed loop contorl.
+   * @param isOpenLoop    Whether to be open loop or closed loop contorl.
    */
   public void drive(double xSpeed, double ySpeed, double rotSpeed, boolean fieldRelative, boolean isOpenLoop) {
     SwerveModuleState[] swerveModuleStates;
