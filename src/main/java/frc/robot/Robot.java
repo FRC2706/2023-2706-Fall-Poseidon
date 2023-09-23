@@ -22,7 +22,7 @@ import frc.robot.robotcontainers.RobotContainer;
  * project.
  */
 public class Robot extends TimedRobot {
-  public static CTREConfigs ctreConfigs;
+  
   private Command m_autonomousCommand;
   private RobotContainer m_robotContainer;
 
@@ -32,13 +32,12 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    ctreConfigs = new CTREConfigs();
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
-    m_robotContainer = new PoseidonContainer();
+    createRobotContainer();
   }
 
-  private void instantiateRobotContainer() {
+  private void createRobotContainer() {
     // Instantiate the RobotContainer based on the Robot ID.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     switch (Config.getRobotId()) {

@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.lib.lib3512.config.CTREConfigs;
 import frc.lib.lib3512.config.SwerveModuleConstants;
 
 public final class Config {
@@ -137,6 +138,9 @@ public final class Config {
         new Translation2d(WHEEL_BASE / 2.0, -TRACK_WIDTH / 2.0), // FR
         new Translation2d(-WHEEL_BASE / 2.0, TRACK_WIDTH / 2.0), // RL
         new Translation2d(-WHEEL_BASE / 2.0, -TRACK_WIDTH / 2.0)); // RR
+
+    /* Create Cancoder Configs */
+    public static final CTREConfigs ctreConfigs = new CTREConfigs();
 
     /* Swerve Voltage Compensation */
     public static final double VOLTAGE_COMPENSATION = 12.0;

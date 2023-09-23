@@ -84,7 +84,7 @@ public class SwerveModule {
   private void configSteerEncoder() {
     steerEncoder.configFactoryDefault();
     CANCoderUtil.setCANCoderBusUsage(steerEncoder, CCUsage.kMinimal);
-    steerEncoder.configAllSettings(Robot.ctreConfigs.swerveCanCoderConfig);
+    steerEncoder.configAllSettings(Config.Swerve.ctreConfigs.swerveCanCoderConfig);
   }
 
   private void configSteerMotor() {
