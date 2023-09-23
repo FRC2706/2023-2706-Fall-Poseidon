@@ -24,6 +24,11 @@ public class SwerveSubsystem extends SubsystemBase {
   private SwerveDriveOdometry m_odometry;
   private SwerveModule[] m_swerveModules;
 
+  /**
+   * Get the singleton instance of the SwerveSubsystem.
+   * 
+   * @return Instance of SwerveSubsystem
+   */
   public static SwerveSubsystem getInstance() {
     if (INSTANCE == null) {
       SubsystemChecker.subsystemConstructed(SubsystemType.SwerveSubsystem);
@@ -32,6 +37,7 @@ public class SwerveSubsystem extends SubsystemBase {
     return INSTANCE;
   }
 
+  /* Construct the Swerve Subsystem */
   private SwerveSubsystem() {
     m_pigeon = new PigeonIMU(Config.CanID.PIGEON);
     m_pigeon.configFactoryDefault();
@@ -50,12 +56,27 @@ public class SwerveSubsystem extends SubsystemBase {
         new Pose2d());
   }
 
+  /**
+   * Stop the swerve motors until a new instruction comes.
+   */
   public void stopMotors() {
     for (SwerveModule mod : m_swerveModules) {
       mod.stopMotors();
     }
   }
 
+  /**
+   * Drive swerve with given speeds.
+   * 
+   * Follow WPILib standards for +X, +Y, +rot directions:
+   * https://docs.wpilib.org/en/stable/docs/software/advanced-controls/geometry/coordinate-systems.html
+   * 
+   * @param xSpeed Speed in the X direction in meters per second.
+   * @param ySpeed Speed in the Y direction in meters per second.
+   * @param rotSpeed Angular Speed in radians per second.
+   * @param fieldRelative Whether to be field relative or robot relative.
+   * @param isOpenLoop Whether to be open loop or closed loop contorl.
+   */
   public void drive(double xSpeed, double ySpeed, double rotSpeed, boolean fieldRelative, boolean isOpenLoop) {
     SwerveModuleState[] swerveModuleStates;
     if (fieldRelative) {
@@ -79,6 +100,11 @@ public class SwerveSubsystem extends SubsystemBase {
     }
   }
 
+  /**
+   * Set the states of the modules directly.
+   * 
+   * @param desiredStates Array of 4 SwerveModuleStates (vel and steering angle)
+   */
   public void setModuleStates(SwerveModuleState[] desiredStates) {
     SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Config.Swerve.MAX_ATTAINABLE_SPEED);
 
@@ -87,10 +113,20 @@ public class SwerveSubsystem extends SubsystemBase {
     }
   }
 
+  /**
+   * Get the pose of the robot from odometry.
+   * 
+   * @return Pose2d of the robot.
+   */
   public Pose2d getPose() {
     return m_odometry.getPoseMeters();
   }
 
+  /**
+   * Reset odometry to the given pose.
+   * 
+   * @param pose Pose to reset to.
+   */
   public void resetOdometry(Pose2d pose) {
     m_odometry.resetPosition(
         getYaw(),
@@ -98,6 +134,11 @@ public class SwerveSubsystem extends SubsystemBase {
         pose);
   }
 
+  /**
+   * Get the states (drive vel & steering angle) of all modules.
+   * 
+   * @return Array of SwerveModuleStates.
+   */
   public SwerveModuleState[] getStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
     for (SwerveModule mod : m_swerveModules) {
@@ -106,6 +147,11 @@ public class SwerveSubsystem extends SubsystemBase {
     return states;
   }
 
+  /**
+   * Get the states (drive position & steering angle) of all modules.
+   * 
+   * @return Array of SwerveModulePosition.
+   */
   public SwerveModulePosition[] getPositions() {
     SwerveModulePosition[] positions = new SwerveModulePosition[4];
     for (SwerveModule mod : m_swerveModules) {

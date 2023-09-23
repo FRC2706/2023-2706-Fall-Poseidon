@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.lib.lib3512.config.CTREConfigs;
 import frc.robot.robotcontainers.ArmBotContainer;
 import frc.robot.robotcontainers.BeetleContainer;
 import frc.robot.robotcontainers.ClutchContainer;
@@ -22,7 +21,6 @@ import frc.robot.robotcontainers.RobotContainer;
  * project.
  */
 public class Robot extends TimedRobot {
-  
   private Command m_autonomousCommand;
   private RobotContainer m_robotContainer;
 
