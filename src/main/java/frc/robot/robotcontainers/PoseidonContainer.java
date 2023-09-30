@@ -4,14 +4,10 @@
 
 package frc.robot.robotcontainers;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
-import frc.robot.commands.TeleopSwerveCommand;
-import frc.robot.subsystems.SwerveSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -24,26 +20,15 @@ import frc.robot.subsystems.SwerveSubsystem;
 public class PoseidonContainer extends RobotContainer {
   /* Controllers */
   private final CommandXboxController driver = new CommandXboxController(0);
-
-  /* Drive Controls */
-  private final int translationAxis = XboxController.Axis.kLeftY.value;
-  private final int strafeAxis = XboxController.Axis.kLeftX.value;
-  private final int rotationAxis = XboxController.Axis.kRightX.value;
+  private final CommandXboxController operator = new CommandXboxController(1);
 
   /* Create Subsystems in a specific order */
-  private SwerveSubsystem swerve = SwerveSubsystem.getInstance();
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public PoseidonContainer() {
     // Setup default commands
-    swerve.setDefaultCommand(
-        new TeleopSwerveCommand(
-            swerve,
-            () -> -driver.getRawAxis(translationAxis),
-            () -> -driver.getRawAxis(strafeAxis),
-            () -> -driver.getRawAxis(rotationAxis)));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -54,8 +39,10 @@ public class PoseidonContainer extends RobotContainer {
    * created via the {@link CommandXboxController} or other ways.
    */
   private void configureButtonBindings() {
-    /* Driver Buttons */
-    driver.back().onTrue(swerve.getResetHeadingCommand(Rotation2d.fromDegrees(0)));
+    /* Driver Controls */
+
+
+    /* Operator Controls */
   }
 
   /**
