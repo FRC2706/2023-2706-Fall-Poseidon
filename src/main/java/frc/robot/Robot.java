@@ -8,9 +8,9 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.robotcontainers.ArmBotContainer;
 import frc.robot.robotcontainers.BeetleContainer;
 import frc.robot.robotcontainers.ClutchContainer;
+import frc.robot.robotcontainers.CosmobotContainer;
 import frc.robot.robotcontainers.PoseidonContainer;
 import frc.robot.robotcontainers.RobotContainer;
 
@@ -48,17 +48,8 @@ public class Robot extends TimedRobot {
       case 2:
         m_robotContainer = new BeetleContainer(); break;
 
-      // case 3:
-      //   m_robotContainer = new MergonautContainer(); break;
-
-      // case 4:
-      //   m_robotContainer = new MiniSwerveContainer(); break;
-
-      // case 5:
-      //   m_robotContainer = new MiniNeoDiffContainer(); break;
-      
-      case 6:
-        m_robotContainer = new ArmBotContainer(); break;
+      case 3:
+        m_robotContainer = new CosmobotContainer(); break;
 
       default:
         m_robotContainer = new PoseidonContainer();
