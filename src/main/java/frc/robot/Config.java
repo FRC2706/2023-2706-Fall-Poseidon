@@ -84,9 +84,6 @@ public final class Config {
    * ID 1: Clutch (Rapid React)
    * ID 2: Beetle (Small Talon tank drive)
    * ID 3: Cosmobot (Deep Space)
-   * ID 4: MiniSwerve (Small swerve chassis)
-   * ID 5: NeoBeetle (Small Neo tank drive)
-   * ID 6: ArmBot (Arm Bot)
    * 
    * ...
    * 

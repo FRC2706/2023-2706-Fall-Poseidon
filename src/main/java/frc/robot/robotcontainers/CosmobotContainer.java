@@ -6,8 +6,8 @@ package frc.robot.robotcontainers;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
 
@@ -17,16 +17,12 @@ import frc.robot.Robot;
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
-public class ArmBotContainer extends RobotContainer{
-
+public class CosmobotContainer extends RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
-  public ArmBotContainer() {
+  public CosmobotContainer() {
     // Configure the button bindings
-    LiveWindow.enableAllTelemetry();
-
     configureButtonBindings();
-    
   }
 
   /**
@@ -37,9 +33,8 @@ public class ArmBotContainer extends RobotContainer{
    */
   private void configureButtonBindings() {
     CommandXboxController driver = new CommandXboxController(0);
-    CommandXboxController controlStick = new CommandXboxController(1);
+    CommandXboxController operator = new CommandXboxController(1);
   }
-
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -48,8 +43,6 @@ public class ArmBotContainer extends RobotContainer{
    */
   @Override
   public Command getAutonomousCommand() {
-    return null;
+    return new InstantCommand(); 
   }
-
-
 }
