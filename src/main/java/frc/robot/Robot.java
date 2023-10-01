@@ -4,9 +4,15 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.robotcontainers.ArmBotContainer;
+import frc.robot.robotcontainers.BeetleContainer;
+import frc.robot.robotcontainers.ClutchContainer;
+import frc.robot.robotcontainers.PoseidonContainer;
+import frc.robot.robotcontainers.RobotContainer;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -16,7 +22,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  */
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
-
   private RobotContainer m_robotContainer;
 
   /**
@@ -27,12 +32,46 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
-    m_robotContainer = new RobotContainer();
+    createRobotContainer();
+  }
+
+  private void createRobotContainer() {
+    // Instantiate the RobotContainer based on the Robot ID.  This will perform all our button bindings, and put our
+    // autonomous chooser on the dashboard.
+    switch (Config.getRobotId()) {
+      case 0:
+        m_robotContainer = new PoseidonContainer(); break;
+      
+      case 1:
+        m_robotContainer = new ClutchContainer(); break;
+
+      case 2:
+        m_robotContainer = new BeetleContainer(); break;
+
+      // case 3:
+      //   m_robotContainer = new MergonautContainer(); break;
+
+      // case 4:
+      //   m_robotContainer = new MiniSwerveContainer(); break;
+
+      // case 5:
+      //   m_robotContainer = new MiniNeoDiffContainer(); break;
+      
+      case 6:
+        m_robotContainer = new ArmBotContainer(); break;
+
+      default:
+        m_robotContainer = new PoseidonContainer();
+        DriverStation.reportError(
+            String.format("ISSUE WITH CONSTRUCTING THE ROBOT CONTAINER. \n " +
+                          "PoseidonContainer constructed by default. RobotID: %d", Config.getRobotId()), 
+            true);
+    }
   }
 
   /**
-   * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics
-   * that you want ran during disabled, autonomous, teleoperated and test.
+   * This function is called every robot packet, no matter the mode. Use this for items like
+   * diagnostics that you want ran during disabled, autonomous, teleoperated and test.
    *
    * <p>This runs after the mode specific periodic functions, but before LiveWindow and
    * SmartDashboard integrated updating.
@@ -53,7 +92,7 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledPeriodic() {}
 
-  /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
+  /** This autonomous runs the autonomous command selected by your {@link PoseidonContainer} class. */
   @Override
   public void autonomousInit() {
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
@@ -92,12 +131,4 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during test mode. */
   @Override
   public void testPeriodic() {}
-
-  /** This function is called once when the robot is first started up. */
-  @Override
-  public void simulationInit() {}
-
-  /** This function is called periodically whilst in simulation. */
-  @Override
-  public void simulationPeriodic() {}
 }
