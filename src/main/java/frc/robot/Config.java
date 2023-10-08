@@ -36,6 +36,20 @@ public final class Config {
   private static int robotId = -1;
 
   /**
+   * CAN IDs, ports, channels, etc.
+   */
+  public static class CANID {
+    // Arm Subsystem
+    public static final int TOP_ARM_SPARK_CAN_ID = robotSpecific(5,0,0,0,0,18,18);
+    public static final int BOTTOM_ARM_SPARK_CAN_ID = robotSpecific(4,0,0,0,0,19,19);
+
+    //Arm Subsystem
+    public static final int BOTTOM_CANCODER_CAN_ID = 2;
+    
+
+  }
+
+  /**
    * Returns one of the values passed based on the robot ID
    *
    * @param first The first value (default value)
