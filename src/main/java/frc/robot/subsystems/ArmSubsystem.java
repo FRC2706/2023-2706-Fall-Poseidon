@@ -10,11 +10,15 @@ import com.ctre.phoenix.sensors.CANCoderConfiguration;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import frc.robot.Config;
+import edu.wpi.first.networktables.DoubleEntry;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.lib2706.SubsystemChecker;
@@ -28,9 +32,18 @@ public class ArmSubsystem extends SubsystemBase {
   private static final MotorType motorType = MotorType.kBrushless; //defines brushless motortype
   public final CANSparkMax m_bottomArm; //bottom SparkMax motor controller
   public SparkMaxPIDController m_pidControllerTopArm;
+  
+  //network table entry
+  private final String m_tuningTableBottom = "Arm/BottomArmTuning";
+  private final String m_dataTableBottom = "Arm/BottomArmData";
+  
+  private DoubleEntry m_bottomArmOffset;
 
   //duty cycle encoder
   private DutyCycleEncoder m_bottomDutyCycleEncoder;
+  //embedded relative encoder
+  private RelativeEncoder m_bottomEncoder;
+  
 
   public static ArmSubsystem getInstance() { //gets arm subsystem object to control movement
     if (instance == null) {
@@ -64,6 +77,16 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomDutyCycleEncoder = new DutyCycleEncoder(ArmConfig.bottom_duty_cycle_channel);
     m_bottomDutyCycleEncoder.setDistancePerRotation(360);
 
+    m_bottomEncoder = m_bottomArm.getEncoder();
+    m_bottomEncoder.setPositionConversionFactor(ArmConfig.bottomArmPositionConversionFactor);
+    m_bottomEncoder.setVelocityConversionFactor(ArmConfig.bottomArmVelocityConversionFactor);
+
+    NetworkTable bottomArmTuningTable = NetworkTableInstance.getDefault().getTable(m_tuningTableBottom);
+    m_bottomArmOffset = bottomArmTuningTable.getDoubleTopic("Offset").getEntry(ArmConfig.bottom_arm_offset);
+    m_bottomArmOffset.accept(ArmConfig.bottom_arm_offset);
+
+    //to do: could be moved to another spot
+    updateFromAbsoluteBottom();
   }
 
   @Override
@@ -71,7 +94,11 @@ public class ArmSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
   }
   public double getAbsoluteBottom() {
-   // return Math.toRadians(m_bottomDutyCycleEncoder.getAbsolutePosition() * -360 + m_bottomArmOffset.get());
-   return 0.0;
+   return Math.toRadians(m_bottomDutyCycleEncoder.getAbsolutePosition() * -360 + m_bottomArmOffset.get());
+  }
+
+  public void updateFromAbsoluteBottom() {
+    //to do: check REV system error
+    m_bottomEncoder.setPosition(getAbsoluteBottom());
   }
 }
