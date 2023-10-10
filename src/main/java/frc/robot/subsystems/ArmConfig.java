@@ -21,7 +21,11 @@ public class ArmConfig {
     //duty cycle encoders
     public static final int bottom_duty_cycle_channel = 7;
 
+    //arm offsets
     public static final double bottom_arm_offset = 307.800000;
+
+    //syncing encoders
+    public static double ENCODER_SYNCING_TOLERANCE = 0.01; //radians
 
     public static final double BOTTOM_NEO_GEAR_RATIO =  Config.robotSpecific(62.5,0.0,0.0,0.0);
 

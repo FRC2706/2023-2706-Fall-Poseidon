@@ -8,6 +8,9 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.SubsystemChecker.SubsystemType;
+import frc.robot.commands.SyncArmEncoders;
 import frc.robot.robotcontainers.BeetleContainer;
 import frc.robot.robotcontainers.ClutchContainer;
 import frc.robot.robotcontainers.CosmobotContainer;
@@ -33,6 +36,9 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     createRobotContainer();
+
+    if (SubsystemChecker.canSubsystemConstruct(SubsystemType.ArmSubsystem));
+      new WaitCommand(5).andThen(new SyncArmEncoders()).schedule();
   }
 
   private void createRobotContainer() {

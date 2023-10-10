@@ -16,13 +16,15 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import frc.robot.Config;
+import frc.robot.SubsystemChecker;
+import frc.robot.SubsystemChecker.SubsystemType;
 import edu.wpi.first.networktables.DoubleEntry;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.lib.lib2706.SubsystemChecker;
-import frc.lib.lib2706.SubsystemChecker.SubsystemType;
 
 
 
@@ -37,7 +39,10 @@ public class ArmSubsystem extends SubsystemBase {
   private final String m_tuningTableBottom = "Arm/BottomArmTuning";
   private final String m_dataTableBottom = "Arm/BottomArmData";
   
+  //network table entries for bottom arm
   private DoubleEntry m_bottomArmOffset;
+  private DoublePublisher m_bottomAbsoluteEncoder;
+  private DoublePublisher m_bottomArmPosPub;
 
   //duty cycle encoder
   private DutyCycleEncoder m_bottomDutyCycleEncoder;
@@ -85,14 +90,27 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomArmOffset = bottomArmTuningTable.getDoubleTopic("Offset").getEntry(ArmConfig.bottom_arm_offset);
     m_bottomArmOffset.accept(ArmConfig.bottom_arm_offset);
 
+    NetworkTable bottomArmDataTable = NetworkTableInstance.getDefault().getTable(m_dataTableBottom);
+    m_bottomArmPosPub = bottomArmDataTable.getDoubleTopic("MeasuredAngle").publish(PubSubOption.periodic(0.02));
+    m_bottomAbsoluteEncoder = bottomArmDataTable.getDoubleTopic("Absolute Encoder").publish(PubSubOption.periodic(0.02));
+
     //to do: could be moved to another spot
     updateFromAbsoluteBottom();
   }
 
   @Override
   public void periodic() {
+    double bottomPosition = m_bottomEncoder.getPosition();
+    m_bottomArmPosPub.accept(Math.toDegrees(bottomPosition));
+    m_bottomAbsoluteEncoder.accept(Math.toDegrees(getAbsoluteBottom()));
+
     // This method will be called once per scheduler run
   }
+
+  public double getBottomPosition() {
+    return m_bottomEncoder.getPosition();
+  }
+
   public double getAbsoluteBottom() {
    return Math.toRadians(m_bottomDutyCycleEncoder.getAbsolutePosition() * -360 + m_bottomArmOffset.get());
   }
@@ -100,5 +118,9 @@ public class ArmSubsystem extends SubsystemBase {
   public void updateFromAbsoluteBottom() {
     //to do: check REV system error
     m_bottomEncoder.setPosition(getAbsoluteBottom());
+  }
+
+  public boolean areEncodersSynced() {
+    return Math.abs(getAbsoluteBottom() - getBottomPosition()) < ArmConfig.ENCODER_SYNCING_TOLERANCE;
   }
 }
