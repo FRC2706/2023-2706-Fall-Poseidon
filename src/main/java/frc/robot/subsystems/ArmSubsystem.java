@@ -10,6 +10,7 @@ import com.ctre.phoenix.sensors.CANCoderConfiguration;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.ControlType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -20,13 +21,12 @@ import frc.robot.SubsystemChecker;
 import frc.robot.SubsystemChecker.SubsystemType;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
-
 
 public class ArmSubsystem extends SubsystemBase {
   private static ArmSubsystem instance = null; //static object that contains all movement controls
@@ -40,15 +40,28 @@ public class ArmSubsystem extends SubsystemBase {
   private final String m_dataTableBottom = "Arm/BottomArmData";
   
   //network table entries for bottom arm
+  private DoubleEntry m_bottomArmPSubs;
+  private DoubleEntry m_bottomArmISubs;
+  private DoubleEntry m_bottomArmDSubs;
+  private DoubleEntry m_bottomArmIzSubs;
+  private DoubleEntry m_bottomArmFFSubs;
+  private DoublePublisher m_bottomArmSetpointPub;   
+  private DoublePublisher m_bottomArmVelPub;
+  private DoubleEntry m_bottomArmMomentToVoltage;
+  private DoublePublisher m_bottomArmFFTestingVolts;
   private DoubleEntry m_bottomArmOffset;
   private DoublePublisher m_bottomAbsoluteEncoder;
   private DoublePublisher m_bottomArmPosPub;
+
+  //for bottom arm ff
+  private DoubleSubscriber momentToVoltageConversion;
+  private double m_bottomVoltageConversion;
 
   //duty cycle encoder
   private DutyCycleEncoder m_bottomDutyCycleEncoder;
   //embedded relative encoder
   private RelativeEncoder m_bottomEncoder;
-  
+  public SparkMaxPIDController m_pidControllerBottomArm;  
 
   public static ArmSubsystem getInstance() { //gets arm subsystem object to control movement
     if (instance == null) {
@@ -72,6 +85,7 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomArm.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE);
     m_bottomArm.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE);
 
+    //to be removed
     CANCoderConfiguration config = new CANCoderConfiguration();
     config.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
     config.sensorTimeBase = SensorTimeBase.PerSecond;
@@ -83,28 +97,76 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomDutyCycleEncoder.setDistancePerRotation(360);
 
     m_bottomEncoder = m_bottomArm.getEncoder();
+    //position in radius
     m_bottomEncoder.setPositionConversionFactor(ArmConfig.bottomArmPositionConversionFactor);
     m_bottomEncoder.setVelocityConversionFactor(ArmConfig.bottomArmVelocityConversionFactor);
 
+    m_pidControllerBottomArm = m_bottomArm.getPIDController();
+
+
     NetworkTable bottomArmTuningTable = NetworkTableInstance.getDefault().getTable(m_tuningTableBottom);
+    m_bottomArmPSubs = bottomArmTuningTable.getDoubleTopic("P").getEntry(ArmConfig.bottom_arm_kP);
+    m_bottomArmISubs = bottomArmTuningTable.getDoubleTopic("I").getEntry(ArmConfig.bottom_arm_kI);
+    m_bottomArmDSubs = bottomArmTuningTable.getDoubleTopic("D").getEntry(ArmConfig.bottom_arm_kD);
+    m_bottomArmIzSubs = bottomArmTuningTable.getDoubleTopic("IZone").getEntry(ArmConfig.bottom_arm_kIz);
+    m_bottomArmFFSubs = bottomArmTuningTable.getDoubleTopic("FF").getEntry(ArmConfig.bottom_arm_kFF);
+    m_bottomArmOffset = bottomArmTuningTable.getDoubleTopic("Offset").getEntry(ArmConfig.bottom_arm_offset);
+    momentToVoltageConversion = bottomArmTuningTable.getDoubleTopic("VoltageConversion").subscribe(m_bottomVoltageConversion);
+
+    m_bottomArmFFSubs.accept(ArmConfig.bottom_arm_kFF);
+    m_bottomArmPSubs.accept(ArmConfig.bottom_arm_kP);
+    m_bottomArmISubs.accept(ArmConfig.bottom_arm_kI);
+    m_bottomArmDSubs.accept(ArmConfig.bottom_arm_kD);
+    m_bottomArmIzSubs.accept(ArmConfig.bottom_arm_kIz);
+    m_bottomArmOffset.accept(ArmConfig.bottom_arm_offset);
+
     m_bottomArmOffset = bottomArmTuningTable.getDoubleTopic("Offset").getEntry(ArmConfig.bottom_arm_offset);
     m_bottomArmOffset.accept(ArmConfig.bottom_arm_offset);
 
     NetworkTable bottomArmDataTable = NetworkTableInstance.getDefault().getTable(m_dataTableBottom);
+    
     m_bottomArmPosPub = bottomArmDataTable.getDoubleTopic("MeasuredAngle").publish(PubSubOption.periodic(0.02));
     m_bottomAbsoluteEncoder = bottomArmDataTable.getDoubleTopic("Absolute Encoder").publish(PubSubOption.periodic(0.02));
 
+    m_pidControllerBottomArm.setFF(m_bottomArmFFSubs.get());
+    m_pidControllerBottomArm.setP(m_bottomArmPSubs.get());
+    m_pidControllerBottomArm.setI(m_bottomArmISubs.get());
+    m_pidControllerBottomArm.setD(m_bottomArmDSubs.get());
+    m_pidControllerBottomArm.setIZone(m_bottomArmIzSubs.get()); 
+    m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output);
+
     //to do: could be moved to another spot
+    updatePIDSettings();
     updateFromAbsoluteBottom();
+  }
+
+  public void updatePIDSettings() {
+    m_pidControllerBottomArm.setFF(m_bottomArmFFSubs.get());
+    m_pidControllerBottomArm.setP(m_bottomArmPSubs.get());
+    m_pidControllerBottomArm.setI(m_bottomArmISubs.get());
+    m_pidControllerBottomArm.setD(m_bottomArmDSubs.get());
+    m_pidControllerBottomArm.setIZone(m_bottomArmIzSubs.get());
+    m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output);
   }
 
   @Override
   public void periodic() {
     double bottomPosition = m_bottomEncoder.getPosition();
+
     m_bottomArmPosPub.accept(Math.toDegrees(bottomPosition));
+    m_bottomArmVelPub.accept(m_bottomEncoder.getVelocity());
     m_bottomAbsoluteEncoder.accept(Math.toDegrees(getAbsoluteBottom()));
 
     // This method will be called once per scheduler run
+  }
+
+  //input angle_bottom in radians
+  public void setBottomJointAngle(double angle_bottom) {
+    if (angle_bottom<Math.toRadians(0) || angle_bottom>Math.toRadians(95)) {
+      angle_bottom = Math.toRadians(95);
+    }
+    //setReference angle is in radians)
+    m_pidControllerBottomArm.setReference(Math.toRadians(angle_bottom), ControlType.kPosition, 0,0.0);
   }
 
   public double getBottomPosition() {

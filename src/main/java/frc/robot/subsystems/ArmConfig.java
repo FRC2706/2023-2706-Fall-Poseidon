@@ -17,6 +17,18 @@ public class ArmConfig {
     public static final float bottom_arm_forward_limit = (float)Math.toRadians(135);
     public static final float bottom_arm_reverse_limit = (float)Math.toRadians(40);
     public static final boolean BOTTOM_SOFT_LIMIT_ENABLE = true;
+    
+    //PID constants
+    public static final double bottom_arm_kP = 1.4;
+    public static final double bottom_arm_kI = 0.0003;
+    public static final double bottom_arm_kD = 0.9;
+    public static final double bottom_arm_kIz = 0.3;
+    public static final double bottom_arm_kFF = 0;
+    public static final double min_output = -1;
+    public static final double max_output = 1;
+
+
+
 
     //duty cycle encoders
     public static final int bottom_duty_cycle_channel = 7;
@@ -31,5 +43,9 @@ public class ArmConfig {
 
     public static final double bottomArmPositionConversionFactor = 2 * Math.PI / BOTTOM_NEO_GEAR_RATIO;
     public static final double bottomArmVelocityConversionFactor = bottomArmPositionConversionFactor / 60.0;
+
+    public static final double BOTTOM_MAX_VEL = Math.PI * 3;
+    public static final double BOTTOM_MAX_ACCEL = Math.PI *3;
+
 
 }
