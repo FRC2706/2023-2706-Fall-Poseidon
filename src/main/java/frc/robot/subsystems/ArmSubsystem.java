@@ -92,6 +92,7 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomArm.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE);
 
     m_bottomDutyCycleEncoder = new DutyCycleEncoder(ArmConfig.bottom_duty_cycle_channel);
+    //units = degrees
     m_bottomDutyCycleEncoder.setDistancePerRotation(360);
 
     m_bottomEncoder = m_bottomArm.getEncoder();
@@ -168,7 +169,8 @@ public class ArmSubsystem extends SubsystemBase {
       angle_bottom = Math.toRadians(95);
     }
     //setReference angle is in radians)
-    m_pidControllerBottomArm.setReference(Math.toRadians(angle_bottom), ControlType.kPosition, 0,0.1);
+    //todo: tune FF 
+    m_pidControllerBottomArm.setReference((angle_bottom), ControlType.kPosition, 0,0.1);
   }
 
   public void controlBottomArmBrake( boolean bBrakeOn) {
@@ -181,16 +183,18 @@ public class ArmSubsystem extends SubsystemBase {
     }
   }
 
+  //return radius
   public double getBottomPosition() {
     return m_bottomEncoder.getPosition();
   }
 
   public double getAbsoluteBottom() {
+    //todo: getAbsolutePosition() return unit
    return Math.toRadians(m_bottomDutyCycleEncoder.getAbsolutePosition() * -360 + m_bottomArmOffset.get());
   }
 
   public void updateFromAbsoluteBottom() {
-    //to do: check REV system error
+    //todo: check REV system error
     m_bottomEncoder.setPosition(getAbsoluteBottom());
   }
 

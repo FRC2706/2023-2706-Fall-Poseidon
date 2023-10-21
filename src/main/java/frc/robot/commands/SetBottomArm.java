@@ -10,6 +10,7 @@ import frc.robot.subsystems.ArmSubsystem;
 
 public class SetBottomArm extends CommandBase {
   double bottomArmAngleRadians;
+  final double TIMEOUT_S=2;
 
   Timer m_timer = new Timer();
   /** Creates a new SetBottomArm. */
@@ -25,6 +26,8 @@ public class SetBottomArm extends CommandBase {
     ArmSubsystem.getInstance().controlBottomArmBrake(false);
     m_timer.stop();
     m_timer.reset();
+    //todo: 
+    m_timer.start();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -48,6 +51,6 @@ public class SetBottomArm extends CommandBase {
   public boolean isFinished() {
     //todo: check if bottom arm reaches the position 
     //time out, finished
-    return m_timer.hasElapsed(1);
+    return m_timer.hasElapsed(TIMEOUT_S);
   }
 }

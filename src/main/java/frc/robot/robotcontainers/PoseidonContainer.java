@@ -41,7 +41,7 @@ public class PoseidonContainer extends RobotContainer {
    */
   private void configureButtonBindings() {
     CommandXboxController driver = new CommandXboxController(0);
-    CommandXboxController operater = new CommandXboxController (1);
+    CommandXboxController operator = new CommandXboxController (1);
     /* Driver Controls */
 
 
