@@ -48,4 +48,7 @@ public class ArmConfig {
     public static final double BOTTOM_MAX_ACCEL = Math.PI *3;
 
 
+    
+
+
 }

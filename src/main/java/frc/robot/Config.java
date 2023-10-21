@@ -108,4 +108,12 @@ public final class Config {
 
 
    /** ADD CONSTANTS BELOW THIS LINE */
+
+   //PCM Can ID 
+   public static final int CTRE_PCM_CAN_ID = 1;
+
+   //Constants for arm pneumatics 
+   public static final int ARMLOW_PNEUMATIC_FORWARD_CHANNEL=0;
+   public static final int ARMLOW_PNEUMATIC_REVERSE_CHANNEL = 1;
+   
 }

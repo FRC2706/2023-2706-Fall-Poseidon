@@ -10,7 +10,7 @@ import com.ctre.phoenix.sensors.CANCoderConfiguration;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.ControlType;
+import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -25,7 +25,10 @@ import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ArmSubsystem extends SubsystemBase {
@@ -59,9 +62,13 @@ public class ArmSubsystem extends SubsystemBase {
 
   //duty cycle encoder
   private DutyCycleEncoder m_bottomDutyCycleEncoder;
+
   //embedded relative encoder
   private RelativeEncoder m_bottomEncoder;
   public SparkMaxPIDController m_pidControllerBottomArm;  
+
+  //for arm pneumatic brakakes 
+  DoubleSolenoid brakeSolenoidLow;
 
   public static ArmSubsystem getInstance() { //gets arm subsystem object to control movement
     if (instance == null) {
@@ -135,6 +142,10 @@ public class ArmSubsystem extends SubsystemBase {
     m_pidControllerBottomArm.setIZone(m_bottomArmIzSubs.get()); 
     m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output);
 
+    brakeSolenoidLow = new DoubleSolenoid(Config.CTRE_PCM_CAN_ID,
+                                          PneumaticsModuleType.CTREPCM,
+                                          Config.ARMLOW_PNEUMATIC_FORWARD_CHANNEL,
+                                          Config.ARMLOW_PNEUMATIC_REVERSE_CHANNEL);
     //to do: could be moved to another spot
     updatePIDSettings();
     updateFromAbsoluteBottom();
@@ -166,7 +177,17 @@ public class ArmSubsystem extends SubsystemBase {
       angle_bottom = Math.toRadians(95);
     }
     //setReference angle is in radians)
-    m_pidControllerBottomArm.setReference(Math.toRadians(angle_bottom), ControlType.kPosition, 0,0.0);
+    m_pidControllerBottomArm.setReference(Math.toRadians(angle_bottom), ControlType.kPosition, 0,0.1);
+  }
+
+  public void controlBottomArmBrake( boolean bBrakeOn) {
+    if (bBrakeOn == true) {
+      //set brake on the arm 
+      brakeSolenoidLow.set(Value.kForward);
+    }
+    else {
+      brakeSolenoidLow.set(Value.kReverse);
+    }
   }
 
   public double getBottomPosition() {
@@ -184,5 +205,8 @@ public class ArmSubsystem extends SubsystemBase {
 
   public boolean areEncodersSynced() {
     return Math.abs(getAbsoluteBottom() - getBottomPosition()) < ArmConfig.ENCODER_SYNCING_TOLERANCE;
+  }
+  public void stopMotors() {
+    m_bottomArm.stopMotor();
   }
 }
