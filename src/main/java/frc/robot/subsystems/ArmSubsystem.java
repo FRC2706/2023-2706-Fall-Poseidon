@@ -36,7 +36,6 @@ public class ArmSubsystem extends SubsystemBase {
 
   private static final MotorType motorType = MotorType.kBrushless; //defines brushless motortype
   public final CANSparkMax m_bottomArm; //bottom SparkMax motor controller
-  public SparkMaxPIDController m_pidControllerTopArm;
   
   //network table entry
   private final String m_tuningTableBottom = "Arm/BottomArmTuning";
@@ -91,14 +90,6 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomArm.setSoftLimit(SoftLimitDirection.kReverse, ArmConfig.bottom_arm_reverse_limit);
     m_bottomArm.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE);
     m_bottomArm.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE);
-
-    //to be removed
-    CANCoderConfiguration config = new CANCoderConfiguration();
-    config.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
-    config.sensorTimeBase = SensorTimeBase.PerSecond;
-    config.absoluteSensorRange = AbsoluteSensorRange.Unsigned_0_to_360;
-    config.magnetOffsetDegrees = 0;
-    config.sensorDirection = true;
 
     m_bottomDutyCycleEncoder = new DutyCycleEncoder(ArmConfig.bottom_duty_cycle_channel);
     m_bottomDutyCycleEncoder.setDistancePerRotation(360);
