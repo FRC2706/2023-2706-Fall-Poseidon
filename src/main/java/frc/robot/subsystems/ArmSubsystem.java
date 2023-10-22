@@ -93,7 +93,8 @@ public class ArmSubsystem extends SubsystemBase {
 
     m_bottomDutyCycleEncoder = new DutyCycleEncoder(ArmConfig.bottom_duty_cycle_channel);
     //units = degrees
-    m_bottomDutyCycleEncoder.setDistancePerRotation(360);
+    //units don't impact the getAbsolutePosition() method
+    m_bottomDutyCycleEncoder.setDistancePerRotation(360); 
 
     m_bottomEncoder = m_bottomArm.getEncoder();
     //position in radius
