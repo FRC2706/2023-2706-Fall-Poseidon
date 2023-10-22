@@ -92,9 +92,6 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomArm.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE);
 
     m_bottomDutyCycleEncoder = new DutyCycleEncoder(ArmConfig.bottom_duty_cycle_channel);
-    //units = degrees
-    //units don't impact the getAbsolutePosition() method
-    m_bottomDutyCycleEncoder.setDistancePerRotation(360); 
 
     m_bottomEncoder = m_bottomArm.getEncoder();
     //position in radius
