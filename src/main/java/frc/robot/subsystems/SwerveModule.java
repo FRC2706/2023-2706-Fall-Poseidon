@@ -8,6 +8,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.lib.config.SwerveModuleConstants;
 import frc.lib.math.OnboardModuleState;
@@ -16,9 +17,30 @@ import frc.lib.util.CANCoderUtil.CCUsage;
 import frc.lib.util.CANSparkMaxUtil;
 import frc.lib.util.CANSparkMaxUtil.Usage;
 import frc.robot.Constants;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Robot;
 
 public class SwerveModule {
+
+  private NetworkTable swerveModuleTable;
+  private DoublePublisher currentSpeedEntry;
+  private DoublePublisher currentAngleEntry;
+  private DoublePublisher currentPositionXEntry;
+  private DoublePublisher currentPositionYEntry;
+  private DoublePublisher speedError;
+  private DoublePublisher angleError;
+  private DoublePublisher desiredAngle360Range;
+  private DoublePublisher currentAngle360Range;
+  private double m_encoderOffset;
+  private DoublePublisher canCoderEntry;
+  private DoubleSubscriber sub_offset;
+  private DoublePublisher desiredSpeedEntry;
+  private DoublePublisher desiredAngleEntry;
+
   public int moduleNumber;
   private Rotation2d lastAngle;
   private Rotation2d angleOffset;
@@ -37,10 +59,15 @@ public class SwerveModule {
       new SimpleMotorFeedforward(
           Constants.Swerve.driveKS, Constants.Swerve.driveKV, Constants.Swerve.driveKA);
 
-  public SwerveModule(int moduleNumber, SwerveModuleConstants moduleConstants) {
+  public SwerveModule(int moduleNumber, SwerveModuleConstants moduleConstants, String ModuleName) {
     this.moduleNumber = moduleNumber;
+
+
     angleOffset = moduleConstants.angleOffset;
 
+    String tableName = "SwerveChassis/SwerveModule" + ModuleName;
+    swerveModuleTable = NetworkTableInstance.getDefault().getTable(tableName);
+  
     /* Angle Encoder Config */
     angleEncoder = new CANCoder(moduleConstants.cancoderID);
     configAngleEncoder();
@@ -58,19 +85,37 @@ public class SwerveModule {
     configDriveMotor();
 
     lastAngle = getState().angle;
+
+    desiredSpeedEntry = swerveModuleTable.getDoubleTopic("Desired speed (mps)").publish();
+    desiredAngleEntry = swerveModuleTable.getDoubleTopic("Desired angle (deg)").publish();
+    currentSpeedEntry = swerveModuleTable.getDoubleTopic("Current speed (mps)").publish();
+    currentAngleEntry = swerveModuleTable.getDoubleTopic("Current angle (deg)").publish();
+    currentPositionXEntry = swerveModuleTable.getDoubleTopic("Current positionX (m) ").publish();
+    currentPositionYEntry = swerveModuleTable.getDoubleTopic("Current positionY (m) ").publish();
+    speedError = swerveModuleTable.getDoubleTopic("Speed error (mps)").publish();
+    angleError = swerveModuleTable.getDoubleTopic("Angle error (deg)").publish(); 
+    canCoderEntry = swerveModuleTable.getDoubleTopic("CanCoder").publish();
+    desiredAngle360Range = swerveModuleTable.getDoubleTopic("Desired angle 360 range").publish();
+    currentAngle360Range = swerveModuleTable.getDoubleTopic("Current angle 360 range").publish();
   }
 
   public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop) {
     // Custom optimize command, since default WPILib optimize assumes continuous controller which
     // REV and CTRE are not
+
+
     desiredState = OnboardModuleState.optimize(desiredState, getState().angle);
 
+    
     setAngle(desiredState);
     setSpeed(desiredState, isOpenLoop);
+
+  
   }
 
+
   private void resetToAbsolute() {
-    double absolutePosition = getCanCoder().getDegrees() - angleOffset.getDegrees();
+    double absolutePosition = getCanCoder().getRadians() - angleOffset.getRadians();
     integratedAngleEncoder.setPosition(absolutePosition);
   }
 
@@ -91,9 +136,9 @@ public class SwerveModule {
     angleController.setI(Constants.Swerve.angleKI);
     angleController.setD(Constants.Swerve.angleKD);
     angleController.setFF(Constants.Swerve.angleKFF);
-    angleMotor.enableVoltageCompensation(Constants.Swerve.voltageComp);
-    angleMotor.burnFlash();
+    // angleMotor.enableVoltageCompensation(Constants.Swerve.voltageComp);
     resetToAbsolute();
+    angleMotor.burnFlash();
   }
 
   private void configDriveMotor() {
@@ -108,7 +153,7 @@ public class SwerveModule {
     driveController.setI(Constants.Swerve.angleKI);
     driveController.setD(Constants.Swerve.angleKD);
     driveController.setFF(Constants.Swerve.angleKFF);
-    driveMotor.enableVoltageCompensation(Constants.Swerve.voltageComp);
+    // driveMotor.enableVoltageCompensation(Constants.Swerve.voltageComp);
     driveMotor.burnFlash();
     driveEncoder.setPosition(0.0);
   }
@@ -133,12 +178,12 @@ public class SwerveModule {
             ? lastAngle
             : desiredState.angle;
 
-    angleController.setReference(angle.getDegrees(), ControlType.kPosition);
+    angleController.setReference(angle.getRadians(), ControlType.kPosition);
     lastAngle = angle;
   }
 
   private Rotation2d getAngle() {
-    return Rotation2d.fromDegrees(integratedAngleEncoder.getPosition());
+    return (new Rotation2d(integratedAngleEncoder.getPosition()));
   }
 
   public Rotation2d getCanCoder() {
@@ -147,5 +192,19 @@ public class SwerveModule {
 
   public SwerveModuleState getState() {
     return new SwerveModuleState(driveEncoder.getVelocity(), getAngle());
+  }
+
+  public SwerveModulePosition getPosition() {
+    return new SwerveModulePosition(driveEncoder.getPosition(), getAngle());
+  }
+
+  public void periodic() {
+    //update network tables
+
+    currentSpeedEntry.accept(driveEncoder.getVelocity());
+    currentAngleEntry.accept(getAngle().getRadians());
+    currentPositionXEntry.accept(driveEncoder.getPosition() * Math.cos(getAngle().getRadians()));
+    currentPositionYEntry.accept(driveEncoder.getPosition() * Math.sin(getAngle().getRadians()));  
+    NetworkTableInstance.getDefault().flush();
   }
 }

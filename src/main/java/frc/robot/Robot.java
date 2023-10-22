@@ -13,6 +13,7 @@ import frc.robot.robotcontainers.ClutchContainer;
 import frc.robot.robotcontainers.CosmobotContainer;
 import frc.robot.robotcontainers.PoseidonContainer;
 import frc.robot.robotcontainers.RobotContainer;
+import frc.lib.config.CTREConfigs;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -23,6 +24,7 @@ import frc.robot.robotcontainers.RobotContainer;
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
   private RobotContainer m_robotContainer;
+  public static CTREConfigs ctreConfigs = new CTREConfigs();
 
   /**
    * This function is run when the robot is first started up and should be used for any
