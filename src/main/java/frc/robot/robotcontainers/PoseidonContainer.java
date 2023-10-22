@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
+import frc.robot.commands.ArmPneumaticsCommands.*;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -40,7 +41,15 @@ public class PoseidonContainer extends RobotContainer {
    */
   private void configureButtonBindings() {
     /* Driver Controls */
+    // X - Remove Top Brake
+    driver.x().onTrue(new RemoveTopBrake());
+    // Y - Add Top Brake
+    driver.y().onTrue(new AddTopBrake());
 
+    // A - Remove Bottom Brake
+    driver.a().onTrue(new RemoveBottomBrake());
+    // B - Add Bottom Brake
+    driver.b().onTrue(new AddBottomBrake());
 
     /* Operator Controls */
   }
