@@ -3,12 +3,16 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Config;
 
 public class ArmPneumaticsSubsystem  extends SubsystemBase{
     private DoubleSolenoid topBrakeSolenoid;
     private DoubleSolenoid bottomBrakeSolenoid;
+
+    public Timer topBrakeTimer = new Timer();
+    public Timer bottomBrakeTimer = new Timer();
 
     private static ArmPneumaticsSubsystem instance;
     public static ArmPneumaticsSubsystem getInstance(){
@@ -32,12 +36,7 @@ public class ArmPneumaticsSubsystem  extends SubsystemBase{
             topBrakeSolenoid.set(Value.kReverse);
         }
         if (turnOffAfterHalfSecond) {
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            topBrakeSolenoid.set(Value.kOff);
+            topBrakeTimer.restart();
         }
     }
 
@@ -49,12 +48,26 @@ public class ArmPneumaticsSubsystem  extends SubsystemBase{
             bottomBrakeSolenoid.set(Value.kReverse);
         }
         if (turnOffAfterHalfSecond) {
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            bottomBrakeTimer.restart();
+        }
+    }
+
+    @Override
+    public void periodic() {
+        // This method will be called once per scheduler run
+
+        // check if top brake timer has elapsed
+        if (topBrakeTimer.hasElapsed(0.5)) {
+            topBrakeSolenoid.set(Value.kOff);
+            topBrakeTimer.stop();
+            topBrakeTimer.reset();
+        }
+
+        // check if bottom brake timer has elapsed
+        if (bottomBrakeTimer.hasElapsed(0.5)) {
             bottomBrakeSolenoid.set(Value.kOff);
+            bottomBrakeTimer.stop();
+            bottomBrakeTimer.reset();
         }
     }
 }
