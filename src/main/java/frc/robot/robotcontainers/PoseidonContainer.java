@@ -46,7 +46,7 @@ public class PoseidonContainer extends RobotContainer {
 
 
     /* Operator Controls */
-    operator.a().onTrue(new SetBottomArm(10));
+    operator.a().onTrue(new SetBottomArm(50));
   
   }
 
