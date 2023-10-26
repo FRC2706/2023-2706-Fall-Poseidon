@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Config;
 
@@ -62,6 +63,21 @@ public class GripperSubsystem  extends SubsystemBase{
     public void stop() {
         doubleSolenoid1.set(Value.kOff);
         doubleSolenoid2.set(Value.kOff);
+    }
+
+    // low pressure command
+    public CommandBase lowPressureCommand() {
+        return this.runOnce(() -> lowPressure(true));
+    }
+
+    // high pressure command
+    public CommandBase highPressureCommand() {
+        return this.runOnce(() -> highPressure(true));
+    }
+
+    // no pressure command
+    public CommandBase noPressureCommand() {
+        return this.runOnce(() -> noPressure(true));
     }
 
     @Override
