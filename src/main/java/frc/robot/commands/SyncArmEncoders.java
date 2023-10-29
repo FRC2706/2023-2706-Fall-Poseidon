@@ -25,9 +25,11 @@ public class SyncArmEncoders extends CommandBase {
   public void execute() {
     if (ArmSubsystem.getInstance().areEncodersSynced()==false) {
       DriverStation.reportWarning ("Arm encoders are not synced", false);
+      System.out.println("*****Arm encoders are not synced*****");
     }
     else {
       DriverStation.reportWarning ("Arm encoders are synced", false);
+      System.out.println("*****Arm encoders are synced*****");
 
     }
   }
