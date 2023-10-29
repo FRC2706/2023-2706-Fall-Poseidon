@@ -124,6 +124,7 @@ public class ArmSubsystem extends SubsystemBase {
     
     m_bottomArmPosPub = bottomArmDataTable.getDoubleTopic("MeasuredAngle").publish(PubSubOption.periodic(0.02));
     m_bottomAbsoluteEncoder = bottomArmDataTable.getDoubleTopic("Absolute Encoder").publish(PubSubOption.periodic(0.02));
+    m_bottomArmVelPub = bottomArmDataTable.getDoubleTopic("Vel").publish(PubSubOption.periodic(0.02));
 
     m_pidControllerBottomArm.setFF(m_bottomArmFFSubs.get());
     m_pidControllerBottomArm.setP(m_bottomArmPSubs.get());
@@ -197,6 +198,8 @@ public class ArmSubsystem extends SubsystemBase {
   }
 
   public boolean areEncodersSynced() {
+    //set sparkmax encoder position
+    updateFromAbsoluteBottom();
     return Math.abs(getAbsoluteBottom() - getBottomPosition()) < ArmConfig.ENCODER_SYNCING_TOLERANCE;
   }
   public void stopMotors() {
