@@ -188,7 +188,7 @@ public class ArmSubsystem extends SubsystemBase {
   }
 
   public double getAbsoluteBottom() {
-    //todo: getAbsolutePosition() return unit
+    //getAbsolutePosition() return in [0,1]
    return Math.toRadians(m_bottomDutyCycleEncoder.getAbsolutePosition() * -360 + m_bottomArmOffset.get());
   }
 
