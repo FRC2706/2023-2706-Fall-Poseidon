@@ -26,7 +26,7 @@ public class GripperSubsystem  extends SubsystemBase{
     // Create ArmPneumaticsSubsystem
     private GripperSubsystem(){
         doubleSolenoid1 = new DoubleSolenoid(Config.CTRE_PCM_CAN_ID, PneumaticsModuleType.CTREPCM, Config.INTAKE1_PNEUMATIC_FORWARD_CHANNEL, Config.INTAKE1_PNEUMATIC_REVERSE_CHANNEL);
-        doubleSolenoid2 = new DoubleSolenoid(Config.CTRE_PCM_CAN_ID, PneumaticsModuleType.CTREPCM, Config.INTAKE2_PNEUMATIC_FORWARD_CHANNEL, Config.INTAKE2_PNEUMATIC_FORWARD_CHANNEL);
+        doubleSolenoid2 = new DoubleSolenoid(Config.CTRE_PCM_CAN_ID, PneumaticsModuleType.CTREPCM, Config.INTAKE2_PNEUMATIC_FORWARD_CHANNEL, Config.INTAKE2_PNEUMATIC_REVERSE_CHANNEL);
     }
 
     // Low Pressure
@@ -67,17 +67,17 @@ public class GripperSubsystem  extends SubsystemBase{
 
     // low pressure command
     public Command lowPressureCommand() {
-        return this.runOnce(() -> lowPressure(true));
+        return this.runOnce(() -> lowPressure(false));
     }
 
     // high pressure command
     public Command highPressureCommand() {
-        return this.runOnce(() -> highPressure(true));
+        return this.runOnce(() -> highPressure(false));
     }
 
     // no pressure command
     public Command noPressureCommand() {
-        return this.runOnce(() -> noPressure(true));
+        return this.runOnce(() -> noPressure(false));
     }
 
     // power off both solenoids electronically command
