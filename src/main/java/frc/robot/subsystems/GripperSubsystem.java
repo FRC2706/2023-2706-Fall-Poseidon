@@ -14,6 +14,7 @@ public class GripperSubsystem  extends SubsystemBase{
 
     public Timer solenoid1Timer = new Timer();
     public Timer solenoid2Timer = new Timer();
+    public Timer burstTimer = new Timer();
 
     private static GripperSubsystem instance;
     public static GripperSubsystem getInstance(){
@@ -30,9 +31,16 @@ public class GripperSubsystem  extends SubsystemBase{
     }
 
     // Low Pressure
-    public void lowPressure(boolean turnOffAfterHalfSecond) {
-        doubleSolenoid1.set(Value.kForward);
-        doubleSolenoid2.set(Value.kReverse);
+    public void lowPressure(boolean turnOffAfterHalfSecond, boolean burst) {
+        // Burst function: high pressure for 0.05s then low pressure
+        if (burst) {
+            burstTimer.restart();
+            doubleSolenoid1.set(Value.kForward);
+            doubleSolenoid2.set(Value.kForward);
+        } else {
+            doubleSolenoid1.set(Value.kForward);
+            doubleSolenoid2.set(Value.kReverse);
+        }
         if (turnOffAfterHalfSecond) {
             solenoid1Timer.restart();
             solenoid2Timer.restart();
@@ -67,7 +75,7 @@ public class GripperSubsystem  extends SubsystemBase{
 
     // low pressure command
     public Command lowPressureCommand() {
-        return this.runOnce(() -> lowPressure(true));
+        return this.runOnce(() -> lowPressure(true, true));
     }
 
     // high pressure command
@@ -101,6 +109,14 @@ public class GripperSubsystem  extends SubsystemBase{
             doubleSolenoid2.set(Value.kOff);
             solenoid2Timer.stop();
             solenoid2Timer.reset();
+        }
+
+        // check if burst timer has elapsed
+        if (burstTimer.hasElapsed(0.05)) {
+            doubleSolenoid1.set(Value.kForward);
+            doubleSolenoid2.set(Value.kReverse);
+            burstTimer.stop();
+            burstTimer.reset();
         }
     }
 }
