@@ -67,17 +67,17 @@ public class GripperSubsystem  extends SubsystemBase{
 
     // low pressure command
     public Command lowPressureCommand() {
-        return this.runOnce(() -> lowPressure(false));
+        return this.runOnce(() -> lowPressure(true));
     }
 
     // high pressure command
     public Command highPressureCommand() {
-        return this.runOnce(() -> highPressure(false));
+        return this.runOnce(() -> highPressure(true));
     }
 
     // no pressure command
     public Command noPressureCommand() {
-        return this.runOnce(() -> noPressure(false));
+        return this.runOnce(() -> noPressure(true));
     }
 
     // power off both solenoids electronically command
