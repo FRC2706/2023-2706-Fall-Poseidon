@@ -19,13 +19,13 @@ public final class Constants {
     /* Drivetrain Constants Changed*/
     public static final double trackWidth = Units.inchesToMeters(25.787);
     public static final double wheelBase = Units.inchesToMeters(20.472);
-    public static final double wheelDiameter = Units.inchesToMeters(3.543);
+    public static final double wheelDiameter = Units.inchesToMeters(3.884);
     public static final double wheelCircumference = wheelDiameter * Math.PI;
 
     public static final double openLoopRamp = 0.25;
     public static final double closedLoopRamp = 0.0;
 
-    public static final double driveGearRatio = (6.75 / 1.0); // 6.75:1
+    public static final double driveGearRatio = (8.14 / 1.0); // 6.75:1
     public static final double angleGearRatio = (12.8 / 1.0); // 12.8:1
 
     public static final SwerveDriveKinematics swerveKinematics =
