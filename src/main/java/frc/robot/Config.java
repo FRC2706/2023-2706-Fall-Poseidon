@@ -102,4 +102,10 @@ public final class Config {
   public static final int ARMLOW_PNEUMATIC_REVERSE_CHANNEL = 1;
   public static final int ARMHIGH_PNEUMATIC_FORWARD_CHANNEL = 2;
   public static final int ARMHIGH_PNEUMATIC_REVERSE_CHANNEL = 3;
+  
+  //For intake pneumatics
+  public static final int INTAKE2_PNEUMATIC_FORWARD_CHANNEL = 5;
+  public static final int INTAKE2_PNEUMATIC_REVERSE_CHANNEL = 7;
+  public static final int INTAKE1_PNEUMATIC_FORWARD_CHANNEL = 4;
+  public static final int INTAKE1_PNEUMATIC_REVERSE_CHANNEL = 6;
 }

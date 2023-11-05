@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
 import frc.robot.commands.ArmPneumaticsCommands.*;
+import frc.robot.subsystems.GripperSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -41,16 +42,27 @@ public class PoseidonContainer extends RobotContainer {
    */
   private void configureButtonBindings() {
     /* Driver Controls */
+    
+    //ArmPneumaticsSubsystem commands
     // X - Remove Top Brake
-    driver.x().onTrue(new RemoveTopBrake());
+    driver.leftBumper().onTrue(new RemoveTopBrake());
     // Y - Add Top Brake
-    driver.y().onTrue(new AddTopBrake());
+    driver.leftTrigger().onTrue(new AddTopBrake());
 
     // A - Remove Bottom Brake
-    driver.a().onTrue(new RemoveBottomBrake());
+    driver.rightBumper().onTrue(new RemoveBottomBrake());
     // B - Add Bottom Brake
-    driver.b().onTrue(new AddBottomBrake());
+    driver.rightTrigger().onTrue(new AddBottomBrake());
+    
 
+    // X - Turn off both gripper solenoids electronically
+    driver.x().onTrue(GripperSubsystem.getInstance().stopCommand());
+    // Y - No Pressure
+    driver.y().onTrue(GripperSubsystem.getInstance().noPressureCommand());
+    // A - Low Pressure
+    driver.a().onTrue(GripperSubsystem.getInstance().lowPressureCommand());
+    // B - High Pressure
+    driver.b().onTrue(GripperSubsystem.getInstance().highPressureCommand());
     /* Operator Controls */
   }
 
