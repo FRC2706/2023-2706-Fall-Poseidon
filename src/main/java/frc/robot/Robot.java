@@ -36,9 +36,11 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     createRobotContainer();
-
-    if (SubsystemChecker.canSubsystemConstruct(SubsystemType.ArmSubsystem));
+ 
+    if (SubsystemChecker.canSubsystemConstruct(SubsystemType.ArmSubsystem)) {
+      System.out.println("*****robotInit*****");
       new WaitCommand(5).andThen(new SyncArmEncoders()).schedule();
+    }
   }
 
   private void createRobotContainer() {

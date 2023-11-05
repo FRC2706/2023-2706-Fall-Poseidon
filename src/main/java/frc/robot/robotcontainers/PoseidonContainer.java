@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
 import frc.robot.commands.SetBottomArm;
+import frc.robot.commands.SyncArmEncoders;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -47,6 +48,7 @@ public class PoseidonContainer extends RobotContainer {
 
     /* Operator Controls */
     operator.a().onTrue(new SetBottomArm(85));
+    operator.b().onTrue(new SyncArmEncoders());
   
   }
 

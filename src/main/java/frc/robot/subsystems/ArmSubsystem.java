@@ -198,9 +198,15 @@ public class ArmSubsystem extends SubsystemBase {
   }
 
   public boolean areEncodersSynced() {
-    //set sparkmax encoder position
+    System.out.println("*****areEncodersSynced*****");
+    boolean syncResult;
+      //set sparkmax encoder position
     updateFromAbsoluteBottom();
-    return Math.abs(getAbsoluteBottom() - getBottomPosition()) < ArmConfig.ENCODER_SYNCING_TOLERANCE;
+    System.out.println("getAbsoluteBottom " + getAbsoluteBottom());
+    System.out.println("getBottomPosition " + getBottomPosition());
+    syncResult = Math.abs(getAbsoluteBottom() - getBottomPosition()) < ArmConfig.ENCODER_SYNCING_TOLERANCE;
+    System.out.println("******SyncIteration****** " + "******Result******"  + syncResult);
+    return syncResult; 
   }
   public void stopMotors() {
     m_bottomArm.stopMotor();
