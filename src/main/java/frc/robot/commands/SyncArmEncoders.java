@@ -11,9 +11,11 @@ import frc.robot.subsystems.ArmSubsystem;
 
 public class SyncArmEncoders extends CommandBase {
   int counter;
+  boolean bSynced;
   /** Creates a new SyncArmEncoders. */
   public SyncArmEncoders() {
     counter = 0;
+    bSynced = false;
     addRequirements(ArmSubsystem.getInstance());
     // Use addRequirements() here to declare subsystem dependencies.
   }
@@ -33,6 +35,8 @@ public class SyncArmEncoders extends CommandBase {
     else {
       DriverStation.reportWarning ("Arm encoders are synced", false);
       System.out.println("*****Arm encoders are synced*****");
+      bSynced = true;
+      ArmSubsystem.getInstance().burnFlash();
     }
     
 
@@ -50,10 +54,11 @@ public class SyncArmEncoders extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    if (counter >= 10) {
+    if (counter >= 10 || bSynced == true) {
     return true;
     }
     else {
+
       return false;
     }
   }

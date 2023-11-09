@@ -17,6 +17,7 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import frc.robot.Config;
+import frc.robot.ErrorCheck;
 import frc.robot.SubsystemChecker;
 import frc.robot.SubsystemChecker.SubsystemType;
 import edu.wpi.first.networktables.DoubleEntry;
@@ -81,22 +82,22 @@ public class ArmSubsystem extends SubsystemBase {
   public ArmSubsystem() {
 
     m_bottomArm = new CANSparkMax(Config.CANID.BOTTOM_ARM_SPARK_CAN_ID, motorType); //creates SparkMax motor controller for bottom joint
-    m_bottomArm.restoreFactoryDefaults();
-    m_bottomArm.setSmartCurrentLimit(ArmConfig.CURRENT_LIMIT);
+    ErrorCheck.errREV(m_bottomArm.restoreFactoryDefaults());
+    ErrorCheck.errREV(m_bottomArm.setSmartCurrentLimit(ArmConfig.CURRENT_LIMIT));
     m_bottomArm.setInverted(ArmConfig.BOTTOM_SET_INVERTED); //sets movement direction
-    m_bottomArm.setIdleMode(IdleMode.kBrake); //sets brakes when there is no motion
+    ErrorCheck.errREV(m_bottomArm.setIdleMode(IdleMode.kBrake)); //sets brakes when there is no motion
     
-    m_bottomArm.setSoftLimit(SoftLimitDirection.kForward, ArmConfig.bottom_arm_forward_limit);
-    m_bottomArm.setSoftLimit(SoftLimitDirection.kReverse, ArmConfig.bottom_arm_reverse_limit);
-    m_bottomArm.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE);
-    m_bottomArm.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE);
+    ErrorCheck.errREV(m_bottomArm.setSoftLimit(SoftLimitDirection.kForward, ArmConfig.bottom_arm_forward_limit));
+    ErrorCheck.errREV(m_bottomArm.setSoftLimit(SoftLimitDirection.kReverse, ArmConfig.bottom_arm_reverse_limit));
+    ErrorCheck.errREV(m_bottomArm.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE));
+    ErrorCheck.errREV(m_bottomArm.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE));
 
     m_bottomDutyCycleEncoder = new DutyCycleEncoder(ArmConfig.bottom_duty_cycle_channel);
 
     m_bottomEncoder = m_bottomArm.getEncoder();
     //position in radius
-    m_bottomEncoder.setPositionConversionFactor(ArmConfig.bottomArmPositionConversionFactor);
-    m_bottomEncoder.setVelocityConversionFactor(ArmConfig.bottomArmVelocityConversionFactor);
+    ErrorCheck.errREV(m_bottomEncoder.setPositionConversionFactor(ArmConfig.bottomArmPositionConversionFactor));
+    ErrorCheck.errREV(m_bottomEncoder.setVelocityConversionFactor(ArmConfig.bottomArmVelocityConversionFactor));
 
     m_pidControllerBottomArm = m_bottomArm.getPIDController();
 
@@ -126,12 +127,12 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomAbsoluteEncoder = bottomArmDataTable.getDoubleTopic("Absolute Encoder").publish(PubSubOption.periodic(0.02));
     m_bottomArmVelPub = bottomArmDataTable.getDoubleTopic("Vel").publish(PubSubOption.periodic(0.02));
 
-    m_pidControllerBottomArm.setFF(m_bottomArmFFSubs.get());
-    m_pidControllerBottomArm.setP(m_bottomArmPSubs.get());
-    m_pidControllerBottomArm.setI(m_bottomArmISubs.get());
-    m_pidControllerBottomArm.setD(m_bottomArmDSubs.get());
-    m_pidControllerBottomArm.setIZone(m_bottomArmIzSubs.get()); 
-    m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output);
+    ErrorCheck.errREV(m_pidControllerBottomArm.setFF(m_bottomArmFFSubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setP(m_bottomArmPSubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setI(m_bottomArmISubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setD(m_bottomArmDSubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setIZone(m_bottomArmIzSubs.get())); 
+    ErrorCheck.errREV(m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output));
 
     brakeSolenoidLow = new DoubleSolenoid(Config.CTRE_PCM_CAN_ID,
                                           PneumaticsModuleType.CTREPCM,
@@ -143,12 +144,12 @@ public class ArmSubsystem extends SubsystemBase {
   }
 
   public void updatePIDSettings() {
-    m_pidControllerBottomArm.setFF(m_bottomArmFFSubs.get());
-    m_pidControllerBottomArm.setP(m_bottomArmPSubs.get());
-    m_pidControllerBottomArm.setI(m_bottomArmISubs.get());
-    m_pidControllerBottomArm.setD(m_bottomArmDSubs.get());
-    m_pidControllerBottomArm.setIZone(m_bottomArmIzSubs.get());
-    m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output);
+    ErrorCheck.errREV(m_pidControllerBottomArm.setFF(m_bottomArmFFSubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setP(m_bottomArmPSubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setI(m_bottomArmISubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setD(m_bottomArmDSubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setIZone(m_bottomArmIzSubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output));
   }
 
   @Override
@@ -194,7 +195,7 @@ public class ArmSubsystem extends SubsystemBase {
 
   public void updateFromAbsoluteBottom() {
     //todo: check REV system error
-    m_bottomEncoder.setPosition(getAbsoluteBottom());
+    ErrorCheck.errREV(m_bottomEncoder.setPosition(getAbsoluteBottom()));
   }
 
   public boolean areEncodersSynced() {
@@ -210,5 +211,8 @@ public class ArmSubsystem extends SubsystemBase {
   }
   public void stopMotors() {
     m_bottomArm.stopMotor();
+  }
+  public void burnFlash() {
+    ErrorCheck.errREV(m_bottomArm.burnFlash());
   }
 }
