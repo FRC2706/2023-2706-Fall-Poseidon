@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class Swerve extends SubsystemBase {
+public class SwerveSubsystem extends SubsystemBase {
   private final PigeonIMU gyro;
 
   private SwerveDriveOdometry swerveOdometry;
@@ -24,7 +24,7 @@ public class Swerve extends SubsystemBase {
   
   private Field2d field;
 
-  public Swerve() {
+  public SwerveSubsystem() {
     gyro = new PigeonIMU(Constants.Swerve.pigeonID);
     gyro.configFactoryDefault();
     zeroGyro();
