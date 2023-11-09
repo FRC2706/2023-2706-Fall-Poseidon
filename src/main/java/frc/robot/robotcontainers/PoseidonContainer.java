@@ -10,7 +10,8 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
 import frc.robot.commands.TeleopSwerve;
-import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.SwerveModule;
+import frc.robot.subsystems.SwerveSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -29,7 +30,7 @@ public class PoseidonContainer extends RobotContainer {
   private final int strafeAxis = XboxController.Axis.kLeftX.value;
   private final int rotationAxis = XboxController.Axis.kRightX.value;
 
-  private final Swerve s_Swerve = new Swerve();
+  private final SwerveSubsystem s_Swerve = new SwerveSubsystem();
 
   /* Create Subsystems in a specific order */
 
