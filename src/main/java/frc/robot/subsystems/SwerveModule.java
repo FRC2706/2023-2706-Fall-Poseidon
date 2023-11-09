@@ -116,7 +116,9 @@ public class SwerveModule {
   
   }
 
-
+  /**
+   * Resets Position Encoder
+   */
   private void resetToAbsolute() {
     double absolutePosition = getCanCoder().getRadians() - angleOffset.getRadians();
     integratedAngleEncoder.setPosition(absolutePosition);
@@ -161,6 +163,12 @@ public class SwerveModule {
     driveEncoder.setPosition(0.0);
   }
 
+  /*
+   * Sets Speed
+   * 
+   * @param desiredState
+   * @param isOpenLoop
+   */
   private void setSpeed(SwerveModuleState desiredState, boolean isOpenLoop) {
     if (isOpenLoop) {
       double percentOutput = desiredState.speedMetersPerSecond / Constants.Swerve.maxSpeed;
@@ -174,6 +182,11 @@ public class SwerveModule {
     }
   }
 
+  /**
+   * Sets Angle
+   * 
+   * @param desiredState
+   */
   private void setAngle(SwerveModuleState desiredState) {
     // Prevent rotating module if speed is less then 1%. Prevents jittering.
     Rotation2d angle =
@@ -185,6 +198,11 @@ public class SwerveModule {
     lastAngle = angle;
   }
 
+  /**
+   * Returns Angle
+   * 
+   * @return An
+   */
   private Rotation2d getAngle() {
     return (new Rotation2d(integratedAngleEncoder.getPosition()));
   }
