@@ -34,7 +34,7 @@ public class TeleopSwerve extends CommandBase {
 
   @Override
   public void execute() {
-    /* Get Values, Deadband*/
+    /* Get Values and apply deadband to limit unwanted movement*/
     double translationVal =
         translationLimiter.calculate(
             MathUtil.applyDeadband(translationSup.getAsDouble(), Constants.Swerve.stickDeadband));

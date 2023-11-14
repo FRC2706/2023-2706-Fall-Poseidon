@@ -11,7 +11,6 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
@@ -202,7 +201,7 @@ public class SwerveModule {
   /**
    * Returns Angle
    * 
-   * @return An
+   * @return 
    */
   private Rotation2d getAngle() {
     return (new Rotation2d(integratedAngleEncoder.getPosition()));
@@ -221,7 +220,7 @@ public class SwerveModule {
   }
 
   public void periodic() {
-    //update network tables
+    //Update networktables
 
     currentSpeedEntry.accept(driveEncoder.getVelocity());
     currentAngleEntry.accept(getAngle().getRadians());
