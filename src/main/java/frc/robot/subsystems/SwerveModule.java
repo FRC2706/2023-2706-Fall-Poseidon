@@ -109,11 +109,15 @@ public class SwerveModule {
 
     desiredState = OnboardModuleState.optimize(desiredState, getState().angle);
 
-    
+
     setAngle(desiredState);
     setSpeed(desiredState, isOpenLoop);
 
-  
+
+    desiredAngleEntry.accept(desiredState.angle.getRadians());
+    desiredSpeedEntry.accept(desiredState.speedMetersPerSecond);
+    speedError.accept((desiredState.speedMetersPerSecond)-(driveEncoder.getVelocity()));
+    angleError.accept((desiredState.angle.getRadians())-(getAngle().getRadians()));
   }
 
   /**
@@ -167,7 +171,7 @@ public class SwerveModule {
    * Sets Speed
    * 
    * @param desiredState
-   * @param isOpenLoop
+   * @param isOpenLoop Op
    */
   private void setSpeed(SwerveModuleState desiredState, boolean isOpenLoop) {
     if (isOpenLoop) {
@@ -185,7 +189,7 @@ public class SwerveModule {
   /**
    * Sets Angle
    * 
-   * @param desiredState
+   * @param desiredState 
    */
   private void setAngle(SwerveModuleState desiredState) {
     // Prevent rotating module if speed is less then 1%. Prevents jittering.
@@ -201,7 +205,7 @@ public class SwerveModule {
   /**
    * Returns Angle
    * 
-   * @return 
+   * @return An
    */
   private Rotation2d getAngle() {
     return (new Rotation2d(integratedAngleEncoder.getPosition()));
@@ -220,7 +224,7 @@ public class SwerveModule {
   }
 
   public void periodic() {
-    //Update networktables
+    //update network tables
 
     currentSpeedEntry.accept(driveEncoder.getVelocity());
     currentAngleEntry.accept(getAngle().getRadians());
