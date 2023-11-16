@@ -13,6 +13,8 @@ import frc.robot.Robot;
 import frc.robot.commands.TeleopSwerve;
 import frc.robot.subsystems.SwerveModule;
 import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.commands.ArmPneumaticsCommands.*;
+import frc.robot.subsystems.GripperSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -59,7 +61,26 @@ public class PoseidonContainer extends RobotContainer {
   private void configureButtonBindings() {
     /* Driver Controls */
     driver.a().onTrue(new InstantCommand(() -> s_Swerve.zeroGyro()));
+    
+    //ArmPneumaticsSubsystem commands
+    // X - Remove Top Brake
+    driver.leftBumper().onTrue(new RemoveTopBrake());
+    // Y - Add Top Brake
+    driver.leftTrigger().onTrue(new AddTopBrake());
 
+    // A - Remove Bottom Brake
+    driver.rightBumper().onTrue(new RemoveBottomBrake());
+    // B - Add Bottom Brake
+    driver.rightTrigger().onTrue(new AddBottomBrake());
+
+    // X - Turn off both gripper solenoids electronically
+    driver.x().onTrue(GripperSubsystem.getInstance().stopCommand());
+    // Y - No Pressure
+    driver.y().onTrue(GripperSubsystem.getInstance().noPressureCommand());
+    // A - Low Pressure
+    driver.a().onTrue(GripperSubsystem.getInstance().lowPressureCommand());
+    // B - High Pressure
+    driver.b().onTrue(GripperSubsystem.getInstance().highPressureCommand());
     /* Operator Controls */
   }
 
