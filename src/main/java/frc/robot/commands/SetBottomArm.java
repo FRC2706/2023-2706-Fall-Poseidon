@@ -43,7 +43,7 @@ public class SetBottomArm extends CommandBase {
   @Override
   public void end(boolean interrupted) {
     ArmSubsystem.getInstance().stopMotors();
-    //if (interrupted == false)
+    if (interrupted == false)
      {
       //ArmSubsystem.getInstance().controlBottomArmBrake(true);
       ArmPneumaticsSubsystem.getInstance().controlBottomBrake(true, true);
