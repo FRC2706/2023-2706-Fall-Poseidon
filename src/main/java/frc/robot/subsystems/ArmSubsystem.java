@@ -68,7 +68,7 @@ public class ArmSubsystem extends SubsystemBase {
   public SparkMaxPIDController m_pidControllerBottomArm;  
 
   //for arm pneumatic brakakes 
-  DoubleSolenoid brakeSolenoidLow;
+  //DoubleSolenoid brakeSolenoidLow;
 
   public static ArmSubsystem getInstance() { //gets arm subsystem object to control movement
     if (instance == null) {
@@ -134,10 +134,11 @@ public class ArmSubsystem extends SubsystemBase {
     ErrorCheck.errREV(m_pidControllerBottomArm.setIZone(m_bottomArmIzSubs.get())); 
     ErrorCheck.errREV(m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output));
 
-    brakeSolenoidLow = new DoubleSolenoid(Config.CTRE_PCM_CAN_ID,
+    /*brakeSolenoidLow = new DoubleSolenoid(Config.CTRE_PCM_CAN_ID,
                                           PneumaticsModuleType.CTREPCM,
                                           Config.ARMLOW_PNEUMATIC_FORWARD_CHANNEL,
                                           Config.ARMLOW_PNEUMATIC_REVERSE_CHANNEL);
+                                          */
     //to do: could be moved to another spot
     updatePIDSettings();
     updateFromAbsoluteBottom();
@@ -173,7 +174,7 @@ public class ArmSubsystem extends SubsystemBase {
     m_pidControllerBottomArm.setReference((angle_bottom), ControlType.kPosition, 0,0.1);
   }
 
-  public void controlBottomArmBrake( boolean bBrakeOn) {
+  /*public void controlBottomArmBrake( boolean bBrakeOn) {
     if (bBrakeOn == true) {
       //set brake on the arm 
       brakeSolenoidLow.set(Value.kForward);
@@ -182,6 +183,7 @@ public class ArmSubsystem extends SubsystemBase {
       brakeSolenoidLow.set(Value.kReverse);
     }
   }
+  */
 
   //return radius
   public double getBottomPosition() {

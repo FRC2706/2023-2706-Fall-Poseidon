@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.subsystems.ArmPneumaticsSubsystem;
 import frc.robot.subsystems.ArmSubsystem;
 
 public class SetBottomArm extends CommandBase {
@@ -18,12 +19,14 @@ public class SetBottomArm extends CommandBase {
     bottomArmAngleRadians = Math.toRadians(angleDegree);
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(ArmSubsystem.getInstance());
+    addRequirements(ArmPneumaticsSubsystem.getInstance());
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    ArmSubsystem.getInstance().controlBottomArmBrake(false);
+    //ArmSubsystem.getInstance().controlBottomArmBrake(false);
+    ArmPneumaticsSubsystem.getInstance().controlBottomBrake(false, false);
     m_timer.stop();
     m_timer.reset();
     //todo: 
@@ -40,8 +43,11 @@ public class SetBottomArm extends CommandBase {
   @Override
   public void end(boolean interrupted) {
     ArmSubsystem.getInstance().stopMotors();
-    if (interrupted == false) {
-      ArmSubsystem.getInstance().controlBottomArmBrake(true);
+    //if (interrupted == false)
+     {
+      //ArmSubsystem.getInstance().controlBottomArmBrake(true);
+      ArmPneumaticsSubsystem.getInstance().controlBottomBrake(true, true);
+
     }
     m_timer.stop();
   }
