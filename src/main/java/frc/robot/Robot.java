@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.SubsystemChecker.SubsystemType;
 import frc.robot.commands.CheckArmEncodersSync;
@@ -42,6 +43,7 @@ public class Robot extends TimedRobot {
       System.out.println("*****robotInit*****");
       new WaitCommand(5).andThen(new SyncArmEncoders()).schedule();
       //new WaitCommand(10).andThen(new CheckArmEncodersSync()).schedule();
+      new WaitCommand(10).andThen(new ScheduleCommand(new CheckArmEncodersSync())).schedule();
     }
 
   }
