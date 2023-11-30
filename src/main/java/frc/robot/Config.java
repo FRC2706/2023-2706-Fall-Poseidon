@@ -108,4 +108,9 @@ public final class Config {
   public static final int INTAKE2_PNEUMATIC_REVERSE_CHANNEL = 7;
   public static final int INTAKE1_PNEUMATIC_FORWARD_CHANNEL = 4;
   public static final int INTAKE1_PNEUMATIC_REVERSE_CHANNEL = 6;
+
+  //Teleop Swere for Converting to meters per second
+  public static final double drive_constant = 3;
+  public static final double angular = 4 * Math.PI;
+
 }
