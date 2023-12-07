@@ -15,12 +15,12 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import frc.lib.config.SwerveModuleConstants;
-import frc.lib.math.OnboardModuleState;
-import frc.lib.util.CANCoderUtil;
-import frc.lib.util.CANCoderUtil.CCUsage;
-import frc.lib.util.CANSparkMaxUtil;
-import frc.lib.util.CANSparkMaxUtil.Usage;
+import frc.lib.lib3512.config.SwerveModuleConstants;
+import frc.lib.lib3512.math.OnboardModuleState;
+import frc.lib.lib3512.util.CANCoderUtil;
+import frc.lib.lib3512.util.CANSparkMaxUtil;
+import frc.lib.lib3512.util.CANCoderUtil.CCUsage;
+import frc.lib.lib3512.util.CANSparkMaxUtil.Usage;
 import frc.robot.Config;
 import frc.robot.Robot;
 

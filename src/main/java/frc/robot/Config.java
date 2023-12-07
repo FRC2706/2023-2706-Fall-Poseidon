@@ -13,7 +13,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
-import frc.lib.config.SwerveModuleConstants;
+import frc.lib.lib3512.config.SwerveModuleConstants;
 
 public final class Config {
   /**

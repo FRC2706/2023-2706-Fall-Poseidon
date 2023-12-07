@@ -1,4 +1,4 @@
-package frc.lib.config;
+package frc.lib.lib3512.config;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 

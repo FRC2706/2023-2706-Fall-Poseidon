@@ -1,4 +1,4 @@
-package frc.lib.config;
+package frc.lib.lib3512.config;
 
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoderConfiguration;

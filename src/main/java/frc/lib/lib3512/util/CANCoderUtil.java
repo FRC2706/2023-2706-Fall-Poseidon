@@ -1,4 +1,4 @@
-package frc.lib.util;
+package frc.lib.lib3512.util;
 
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderStatusFrame;
