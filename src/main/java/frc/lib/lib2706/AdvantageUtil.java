@@ -15,9 +15,16 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 /**
- * Copied and modified/added version from team 686
+ * AdvantageUtil defines static functions to help format data for AdvantageScope
+ * 
+ * This is a copied and modified/added to version from team 686.
  */
 public class AdvantageUtil {
+    /** Utility class, so constructor is private. */
+    private AdvantageUtil() {
+        throw new UnsupportedOperationException("This is a utility class!");
+    }
+
     /**
      * Deconstruct a Pose3d into a double[] for AdvantageScope.
      * 
