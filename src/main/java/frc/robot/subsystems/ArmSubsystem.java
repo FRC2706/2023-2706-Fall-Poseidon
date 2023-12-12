@@ -12,10 +12,13 @@ import com.ctre.phoenix.sensors.SensorTimeBase;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxAbsoluteEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
+
 import frc.robot.Config;
 import frc.robot.ErrorCheck;
 import frc.robot.SubsystemChecker;
@@ -61,7 +64,10 @@ public class ArmSubsystem extends SubsystemBase {
   private double m_bottomVoltageConversion;
 
   //duty cycle encoder
-  private DutyCycleEncoder m_bottomDutyCycleEncoder;
+  //private DutyCycleEncoder m_bottomDutyCycleEncoder;
+
+  //spark max absolute encoder
+  SparkMaxAbsoluteEncoder m_bottomAbsEncoder;
 
   //embedded relative encoder
   private RelativeEncoder m_bottomEncoder;
@@ -92,7 +98,12 @@ public class ArmSubsystem extends SubsystemBase {
     ErrorCheck.errREV(m_bottomArm.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE));
     ErrorCheck.errREV(m_bottomArm.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE));
 
-    m_bottomDutyCycleEncoder = new DutyCycleEncoder(ArmConfig.bottom_duty_cycle_channel);
+    //m_bottomDutyCycleEncoder = new DutyCycleEncoder(ArmConfig.bottom_duty_cycle_channel);
+    m_bottomAbsEncoder = m_bottomArm.getAbsoluteEncoder(Type.kDutyCycle);
+    m_bottomAbsEncoder.setInverted(true);
+    m_bottomAbsEncoder.setPositionConversionFactor(360);
+    m_bottomAbsEncoder.setZeroOffset(0);
+
 
     m_bottomEncoder = m_bottomArm.getEncoder();
     //position in radius
@@ -100,6 +111,7 @@ public class ArmSubsystem extends SubsystemBase {
     ErrorCheck.errREV(m_bottomEncoder.setVelocityConversionFactor(ArmConfig.bottomArmVelocityConversionFactor));
 
     m_pidControllerBottomArm = m_bottomArm.getPIDController();
+    m_pidControllerBottomArm.setFeedbackDevice(m_bottomAbsEncoder);
 
 
     NetworkTable bottomArmTuningTable = NetworkTableInstance.getDefault().getTable(m_tuningTableBottom);
@@ -192,10 +204,15 @@ public class ArmSubsystem extends SubsystemBase {
 
   public double getAbsoluteBottom() {
     //getAbsolutePosition() return in [0,1]
-   return Math.toRadians(m_bottomDutyCycleEncoder.getAbsolutePosition() * -360 + m_bottomArmOffset.get());
+   //return Math.toRadians(m_bottomDutyCycleEncoder.getAbsolutePosition() * -360 + m_bottomArmOffset.get());
+  //double absPosition = m_bottomAbsEncoder.getPosition();
+  //double adjAbsPosition = absPosition-((int) absPosition/360)*360.0;
+   //System.out.println("Get abs position(degree) " + absPosition);
+   //System.out.println("adjusted abs position " + adjAbsPosition);
+   return Math.toRadians(m_bottomAbsEncoder.getPosition()-52); //+ m_bottomArmOffset.get());
   }
 
-  public void updateFromAbsoluteBottom() {
+  public void updateFromAbsoluteBottom() { 
     //todo: check REV system error
     ErrorCheck.errREV(m_bottomEncoder.setPosition(getAbsoluteBottom()));
   }
