@@ -5,11 +5,11 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.ArmPneumaticsSubsystem;
 import frc.robot.subsystems.ArmSubsystem;
 
-public class SetBottomArm extends CommandBase {
+public class SetBottomArm extends Command {
   double bottomArmAngleRadians;
   final double TIMEOUT_S=2;
 
@@ -36,7 +36,7 @@ public class SetBottomArm extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    ArmSubsystem.getInstance().setBottomJointAngle(bottomArmAngleRadians);
+    // ArmSubsystem.getInstance().setBottomJointAngle(bottomArmAngleRadians);
   }
 
   // Called once the command ends or is interrupted.

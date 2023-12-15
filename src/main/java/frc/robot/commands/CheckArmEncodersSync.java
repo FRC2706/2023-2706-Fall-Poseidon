@@ -4,11 +4,10 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.ArmSubsystem;
 
-public class CheckArmEncodersSync extends CommandBase {
+public class CheckArmEncodersSync extends Command {
   /** Creates a new CheckArmEncodersSync. */
   public CheckArmEncodersSync() {
     // Use addRequirements() here to declare subsystem dependencies.
@@ -23,14 +22,14 @@ public class CheckArmEncodersSync extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if (ArmSubsystem.getInstance().areEncodersSynced()==false) {
-      DriverStation.reportWarning ("CheckArmEncoders: Arm encoders are not synced", false);
-      System.out.println("*****CheckArmEncoders: Arm encoders are not synced*****");
-    }
-    else {
-      DriverStation.reportWarning ("CheckArmEncoders: Arm encoders are synced", false);
-      System.out.println("*****CheckArmEncoders: Arm encoders are synced*****");
-    }
+    // if (ArmSubsystem.getInstance().areEncodersSynced()==false) {
+    //   DriverStation.reportWarning ("CheckArmEncoders: Arm encoders are not synced", false);
+    //   System.out.println("*****CheckArmEncoders: Arm encoders are not synced*****");
+    // }
+    // else {
+    //   DriverStation.reportWarning ("CheckArmEncoders: Arm encoders are synced", false);
+    //   System.out.println("*****CheckArmEncoders: Arm encoders are synced*****");
+    // }
     
   }
 

@@ -4,12 +4,10 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.ArmSubsystem;
 
-public class SyncArmEncoders extends CommandBase {
+public class SyncArmEncoders extends Command {
   int counter;
   boolean bSynced;
   /** Creates a new SyncArmEncoders. */
@@ -28,16 +26,16 @@ public class SyncArmEncoders extends CommandBase {
   @Override
   public void execute() {
     counter ++;
-    if (ArmSubsystem.getInstance().areEncodersSynced()==false) {
-      DriverStation.reportWarning ("Arm encoders are not synced", false);
-      System.out.println("*****Arm encoders are not synced*****");
-    }
-    else {
-      DriverStation.reportWarning ("Arm encoders are synced", false);
-      System.out.println("*****Arm encoders are synced*****");
-      bSynced = true;
-      ArmSubsystem.getInstance().burnFlash();
-    }
+    // if (ArmSubsystem.getInstance().areEncodersSynced()==false) {
+    //   DriverStation.reportWarning ("Arm encoders are not synced", false);
+    //   System.out.println("*****Arm encoders are not synced*****");
+    // }
+    // else {
+    //   DriverStation.reportWarning ("Arm encoders are synced", false);
+    //   System.out.println("*****Arm encoders are synced*****");
+    //   bSynced = true;
+    //   ArmSubsystem.getInstance().burnFlash();
+    // }
     
 
   }

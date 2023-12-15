@@ -7,6 +7,7 @@ package frc.robot.robotcontainers;
 
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
@@ -17,6 +18,7 @@ import frc.robot.commands.ArmPneumaticsCommands.AddBottomBrake;
 import frc.robot.commands.ArmPneumaticsCommands.AddTopBrake;
 import frc.robot.commands.ArmPneumaticsCommands.RemoveBottomBrake;
 import frc.robot.commands.ArmPneumaticsCommands.RemoveTopBrake;
+import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.GripperSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 
@@ -38,6 +40,7 @@ public class PoseidonContainer extends RobotContainer {
   private final int rotationAxis = XboxController.Axis.kRightX.value;
 
   private final SwerveSubsystem s_Swerve = new SwerveSubsystem();
+  private final ArmSubsystem s_arm = ArmSubsystem.getInstance();
 
   /* Create Subsystems in a specific order */
 
@@ -90,9 +93,25 @@ public class PoseidonContainer extends RobotContainer {
 
 
     /* Operator Controls */
-    operator.a().onTrue(new SetBottomArm(90));
-    operator.b().onTrue(new SetBottomArm(80));
-    operator.y().onTrue(new SyncArmEncoders());
+    // operator.a().onTrue(new SetBottomArm(90));
+    // operator.b().onTrue(new SetBottomArm(80));
+    // operator.y().onTrue(new SyncArmEncoders());
+
+    operator.a().whileTrue(Commands.run(() -> 
+        ArmSubsystem.getInstance().setAngles(
+          Math.toRadians(75), 
+          Math.toRadians(90), 0, 0), 
+          ArmSubsystem.getInstance()))
+      .onTrue(Commands.runOnce(ArmSubsystem.getInstance()::resetProfiledPIDControllers))
+      .onFalse(Commands.runOnce(ArmSubsystem.getInstance()::stopMotors));
+
+    operator.b().whileTrue(Commands.run(() -> 
+        ArmSubsystem.getInstance().setAngles(
+          Math.toRadians(45), 
+          Math.toRadians(180), 0, 0), 
+          ArmSubsystem.getInstance()))
+      .onTrue(Commands.runOnce(ArmSubsystem.getInstance()::resetProfiledPIDControllers))
+      .onFalse(Commands.runOnce(ArmSubsystem.getInstance()::stopMotors));
   
   }
 
