@@ -4,6 +4,11 @@
 
 package frc.robot;
 
+import java.net.NetworkInterface;
+
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -13,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.SubsystemChecker.SubsystemType;
 import frc.robot.commands.CheckArmEncodersSync;
 import frc.robot.commands.SyncArmEncoders;
+import frc.lib.lib3512.config.CTREConfigs;
 import frc.robot.robotcontainers.BeetleContainer;
 import frc.robot.robotcontainers.ClutchContainer;
 import frc.robot.robotcontainers.CosmobotContainer;
@@ -28,6 +34,9 @@ import frc.robot.robotcontainers.RobotContainer;
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
   private RobotContainer m_robotContainer;
+  DoublePublisher xPub;
+  DoublePublisher yPub;
+  public static CTREConfigs ctreConfigs = new CTREConfigs();
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -37,6 +46,12 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
+    NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    NetworkTable table = inst.getTable("datatable");
+
+    xPub = table.getDoubleTopic("x").publish();
+    yPub = table.getDoubleTopic("y").publish();
+
     createRobotContainer();
  
     if (SubsystemChecker.canSubsystemConstruct(SubsystemType.ArmSubsystem)) {
@@ -48,9 +63,18 @@ public class Robot extends TimedRobot {
 
   }
 
+  double x = 0;
+  double y = 0;
+
   private void createRobotContainer() {
     // Instantiate the RobotContainer based on the Robot ID.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
+
+    xPub.accept(x);
+    yPub.accept(y);
+    x += 0.05;
+    y += 1.0;
+
     switch (Config.getRobotId()) {
       case 0:
         m_robotContainer = new PoseidonContainer(); break;

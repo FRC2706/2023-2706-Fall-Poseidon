@@ -1,17 +1,24 @@
-// Copyright (c) FIRST and other WPILib contributors.
+  
+  // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.robotcontainers;
 
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
 import frc.robot.commands.SetBottomArm;
 import frc.robot.commands.SyncArmEncoders;
-import frc.robot.commands.ArmPneumaticsCommands.*;
+import frc.robot.commands.TeleopSwerve;
+import frc.robot.commands.ArmPneumaticsCommands.AddBottomBrake;
+import frc.robot.commands.ArmPneumaticsCommands.AddTopBrake;
+import frc.robot.commands.ArmPneumaticsCommands.RemoveBottomBrake;
+import frc.robot.commands.ArmPneumaticsCommands.RemoveTopBrake;
 import frc.robot.subsystems.GripperSubsystem;
+import frc.robot.subsystems.SwerveSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -26,6 +33,12 @@ public class PoseidonContainer extends RobotContainer {
   private final CommandXboxController driver = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
 
+  private final int translationAxis = XboxController.Axis.kLeftY.value;
+  private final int strafeAxis = XboxController.Axis.kLeftX.value;
+  private final int rotationAxis = XboxController.Axis.kRightX.value;
+
+  private final SwerveSubsystem s_Swerve = new SwerveSubsystem();
+
   /* Create Subsystems in a specific order */
 
   /**
@@ -33,7 +46,14 @@ public class PoseidonContainer extends RobotContainer {
    */
   public PoseidonContainer() {
     // Setup default commands
-
+    s_Swerve.setDefaultCommand(
+        new TeleopSwerve(
+            s_Swerve,
+            () -> -driver.getRawAxis(translationAxis),
+            () -> -driver.getRawAxis(strafeAxis),
+            () -> -driver.getRawAxis(rotationAxis)
+        )
+    );
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -46,6 +66,7 @@ public class PoseidonContainer extends RobotContainer {
     CommandXboxController driver = new CommandXboxController(0);
     CommandXboxController operator = new CommandXboxController (1);
     /* Driver Controls */
+    driver.a().onTrue(new InstantCommand(() -> s_Swerve.zeroGyro()));
     
     //ArmPneumaticsSubsystem commands
     // X - Remove Top Brake
@@ -57,7 +78,6 @@ public class PoseidonContainer extends RobotContainer {
     driver.rightBumper().onTrue(new RemoveBottomBrake());
     // B - Add Bottom Brake
     driver.rightTrigger().onTrue(new AddBottomBrake());
-    
 
     // X - Turn off both gripper solenoids electronically
     driver.x().onTrue(GripperSubsystem.getInstance().stopCommand());

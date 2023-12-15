@@ -1,9 +1,9 @@
 package frc.robot.commands.ArmPneumaticsCommands;
 
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.ArmPneumaticsSubsystem;
 
-public class AddBottomBrake extends CommandBase {
+public class AddBottomBrake extends Command {
   /** Creates a new ArmPneumaticsCommands. */
   public AddBottomBrake() {
     addRequirements(ArmPneumaticsSubsystem.getInstance());
