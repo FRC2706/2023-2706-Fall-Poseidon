@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMax.IdleMode;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -132,6 +133,8 @@ public final class Config {
   public static final int INTAKE2_PNEUMATIC_REVERSE_CHANNEL = 7;
   public static final int INTAKE1_PNEUMATIC_FORWARD_CHANNEL = 4;
   public static final int INTAKE1_PNEUMATIC_REVERSE_CHANNEL = 6;
+
+  public static final CANSparkMaxLowLevel.MotorType NEO_MOTORTYPE = CANSparkMaxLowLevel.MotorType.kBrushless; // MUST BE BRUSHLESS!!!
 
   public static final class Swerve {
     public static final double stickDeadband = 0.1;
