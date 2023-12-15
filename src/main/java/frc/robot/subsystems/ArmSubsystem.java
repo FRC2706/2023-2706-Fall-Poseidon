@@ -15,11 +15,11 @@ import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.lib2706.ErrorCheck;
+import frc.lib.lib2706.SubsystemChecker;
+import frc.lib.lib2706.SubsystemChecker.SubsystemType;
 import frc.robot.Config;
 import frc.robot.Config.CANID;
-import frc.robot.ErrorCheck;
-import frc.robot.SubsystemChecker;
-import frc.robot.SubsystemChecker.SubsystemType;
 
 public class ArmSubsystem extends SubsystemBase {
   private static ArmSubsystem instance = null;

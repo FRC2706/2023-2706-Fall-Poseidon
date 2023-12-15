@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.lib.lib2706;
 
 import com.ctre.phoenix.ErrorCode;
 import com.revrobotics.REVLibError;
