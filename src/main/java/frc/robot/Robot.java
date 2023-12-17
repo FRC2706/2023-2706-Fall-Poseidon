@@ -45,6 +45,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
+    DriverStation.silenceJoystickConnectionWarning(true);
+
     // Add CommandScheduler to shuffleboard so we can display what commands are scheduled
     ShuffleboardTab basicDebuggingTab = Shuffleboard.getTab("BasicDebugging");
     basicDebuggingTab

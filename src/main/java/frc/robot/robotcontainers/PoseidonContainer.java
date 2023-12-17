@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
+import frc.robot.commands.ControlSingleArm;
 import frc.robot.commands.SetBottomArm;
 import frc.robot.commands.SyncArmEncoders;
 import frc.robot.commands.TeleopSwerve;
@@ -18,6 +19,7 @@ import frc.robot.commands.ArmPneumaticsCommands.AddBottomBrake;
 import frc.robot.commands.ArmPneumaticsCommands.AddTopBrake;
 import frc.robot.commands.ArmPneumaticsCommands.RemoveBottomBrake;
 import frc.robot.commands.ArmPneumaticsCommands.RemoveTopBrake;
+import frc.robot.subsystems.ArmPneumaticsSubsystem;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.GripperSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
@@ -97,22 +99,38 @@ public class PoseidonContainer extends RobotContainer {
     // operator.b().onTrue(new SetBottomArm(80));
     // operator.y().onTrue(new SyncArmEncoders());
 
-    operator.a().whileTrue(Commands.run(() -> 
-        ArmSubsystem.getInstance().setAngles(
-          Math.toRadians(75), 
-          Math.toRadians(90), 0, 0), 
-          ArmSubsystem.getInstance()))
-      .onTrue(Commands.runOnce(ArmSubsystem.getInstance()::resetProfiledPIDControllers))
-      .onFalse(Commands.runOnce(ArmSubsystem.getInstance()::stopMotors));
+    // operator.a().whileTrue(Commands.run(() -> 
+    //     ArmSubsystem.getInstance().setAngles(
+    //       Math.toRadians(75), 
+    //       Math.toRadians(90), 0, 0), 
+    //       ArmSubsystem.getInstance()))
+    //   .onTrue(Commands.runOnce(ArmSubsystem.getInstance()::resetProfiledPIDControllers))
+    //   .onFalse(Commands.runOnce(ArmSubsystem.getInstance()::stopMotors));
 
-    operator.b().whileTrue(Commands.run(() -> 
-        ArmSubsystem.getInstance().setAngles(
-          Math.toRadians(45), 
-          Math.toRadians(180), 0, 0), 
-          ArmSubsystem.getInstance()))
-      .onTrue(Commands.runOnce(ArmSubsystem.getInstance()::resetProfiledPIDControllers))
-      .onFalse(Commands.runOnce(ArmSubsystem.getInstance()::stopMotors));
-  
+    // operator.b().whileTrue(Commands.run(() -> 
+    //     ArmSubsystem.getInstance().setAngles(
+    //       Math.toRadians(45), 
+    //       Math.toRadians(180), 0, 0), 
+    //       ArmSubsystem.getInstance()))
+    //   .onTrue(Commands.runOnce(ArmSubsystem.getInstance()::resetProfiledPIDControllers))
+    //   .onFalse(Commands.runOnce(ArmSubsystem.getInstance()::stopMotors));
+
+    // Control the brakes
+    operator.leftTrigger().onTrue(ArmPneumaticsSubsystem.getInstance().getBottomBrakeCommand(true))
+                          .onFalse(ArmPneumaticsSubsystem.getInstance().getBottomBrakeCommand(false));
+
+    operator.rightTrigger().onTrue(ArmPneumaticsSubsystem.getInstance().getTopBrakeCommand(true))
+                           .onFalse(ArmPneumaticsSubsystem.getInstance().getTopBrakeCommand(false));
+
+    
+    operator.a().whileTrue(new ControlSingleArm(true, Math.toRadians(90)));
+    operator.b().whileTrue(new ControlSingleArm(true, Math.toRadians(135)));
+    operator.y().whileTrue(new ControlSingleArm(true, Math.toRadians(180)));
+
+    // operator.a().whileTrue(new ControlSingleArm(false, Math.toRadians(10)));
+    // operator.b().whileTrue(new ControlSingleArm(false, Math.toRadians(30)));
+    // operator.y().whileTrue(new ControlSingleArm(false, Math.toRadians(45)));
+
   }
 
   /**

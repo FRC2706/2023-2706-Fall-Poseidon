@@ -64,6 +64,18 @@ public class ArmConfig {
     public static final double TOP_KD = 0;
 
     /**
+     * Angular velocity feedforward
+     */
+    // Real Robot values:
+    public static final SimpleMotorFeedforward BOT_SIMPLE_FF = new SimpleMotorFeedforward(0, 0, 0);
+    public static final SimpleMotorFeedforward TOP_SIMPLE_FF = new SimpleMotorFeedforward(0, 0, 0);
+
+    // Simulation FF values:
+    // public static final SimpleMotorFeedforward BOT_SIMPLE_FF = new SimpleMotorFeedforward(0, 1.25, 0.06);
+    // public static final SimpleMotorFeedforward TOP_SIMPLE_FF = new SimpleMotorFeedforward(0, 1.23, 0.02);
+
+
+    /**
      * Networktables
      */
     public static final String BOT_DATA_TABLE = "Arm/BotData";
@@ -79,12 +91,6 @@ public class ArmConfig {
      * Arm Feedforward
      */
     public static class ArmFeedforward {
-        /**
-         * Angular velocity feedforward
-         */
-        public static final SimpleMotorFeedforward BOT_SIMPLE_FF = new SimpleMotorFeedforward(0, 1.25, 0.06);
-        public static final SimpleMotorFeedforward TOP_SIMPLE_FF = new SimpleMotorFeedforward(0, 1.23, 0.02);
-
         /**
          * Gravity Compensation
          */

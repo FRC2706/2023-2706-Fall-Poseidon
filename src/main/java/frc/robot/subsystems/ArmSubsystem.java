@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.lib2706.SubsystemChecker;
+import frc.lib.lib2706.UpdateFeedforward;
 import frc.lib.lib2706.SubsystemChecker.SubsystemType;
 import frc.robot.Config;
 import frc.robot.Config.CANID;
@@ -50,6 +51,8 @@ public class ArmSubsystem extends SubsystemBase {
 
   private SimpleMotorFeedforward m_botFF;
   private SimpleMotorFeedforward m_topFF;
+  private UpdateFeedforward m_botUpdateFF;
+  private UpdateFeedforward m_topUpdateFF;
 
   private double lastBotSpeed = 0;
   private double lastTopSpeed = 0;
@@ -62,6 +65,8 @@ public class ArmSubsystem extends SubsystemBase {
   private DoublePublisher pubBotPos, pubBotVel, pubTopPos, pubTopVel;
   private DoublePublisher pubBotPosSet, pubTopPosSet;
   private DoublePublisher pubBotPosProSet, pubBotVelProSet, pubTopPosProSet, pubTopVelProSet;
+
+
   
   public static ArmSubsystem getInstance() {
     if (instance == null) {
@@ -167,8 +172,25 @@ public class ArmSubsystem extends SubsystemBase {
     /**
      * Setup SimpleMotorFeedforward
      */
-    m_botFF = ArmFeedforward.BOT_SIMPLE_FF;
-    m_topFF = ArmFeedforward.TOP_SIMPLE_FF;
+    m_botFF = ArmConfig.BOT_SIMPLE_FF;
+    m_topFF = ArmConfig.TOP_SIMPLE_FF;
+
+    m_botUpdateFF = new UpdateFeedforward(
+      (ff) -> m_botFF = ff, 
+      botTable.getPath() + "/botFF", 
+      ArmConfig.BOT_SIMPLE_FF.ks, 
+      ArmConfig.BOT_SIMPLE_FF.kv, 
+      ArmConfig.BOT_SIMPLE_FF.ka);
+
+    m_topUpdateFF = new UpdateFeedforward(
+      (ff) -> m_topFF = ff, 
+      topTable.getPath() + "/topFF", 
+      ArmConfig.TOP_SIMPLE_FF.ks, 
+      ArmConfig.TOP_SIMPLE_FF.kv, 
+      ArmConfig.TOP_SIMPLE_FF.ka);
+
+      System.out.println("TABLE NAME: " + topTable.getPath() + "/topFF");
+    
 
     /**
      * Burn flash on CANSparkMaxs
@@ -178,6 +200,9 @@ public class ArmSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    m_botUpdateFF.checkForUpdates();
+    m_topUpdateFF.checkForUpdates();
+
     m_armDisplay.updateMeasurementDisplay(
         getBotPosition(), 
         getTopPosition());
@@ -356,7 +381,7 @@ public class ArmSubsystem extends SubsystemBase {
   /**
    * Burn flash after a 0.2 second delay to ensure settings are saved.
    */
-  public void burnFlash() {
+  private void burnFlash() {
     try
     {
       Thread.sleep(200);

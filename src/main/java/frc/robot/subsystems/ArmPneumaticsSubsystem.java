@@ -1,9 +1,10 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Config;
 
@@ -50,6 +51,26 @@ public class ArmPneumaticsSubsystem  extends SubsystemBase{
         if (turnOffAfterHalfSecond) {
             bottomBrakeTimer.restart();
         }
+    }
+
+    /**
+     * Get a command to control the bottom brake.
+     * 
+     * @param brakeOn True to turn the brake on, false to release the brake.
+     * @return The command to control the brake.
+     */
+    public Command getBottomBrakeCommand(boolean brakeOn) {
+        return runOnce(() -> controlBottomBrake(brakeOn, true));
+    }
+
+    /**
+     * Get a command to control the top brake.
+     * 
+     * @param brakeOn True to turn the brake on, false to release the brake.
+     * @return The command to control the brake.
+     */
+    public Command getTopBrakeCommand(boolean brakeOn) {
+        return runOnce(() -> controlTopBrake(brakeOn, true));
     }
 
     @Override

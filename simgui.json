@@ -21,6 +21,9 @@
     "transitory": {
       "Arm": {
         "BotData": {
+          "botFF": {
+            "open": true
+          },
           "open": true
         },
         "TopData": {
