@@ -32,6 +32,21 @@ public class ControlSingleArm extends Command {
         } else {
             ArmPneumaticsSubsystem.getInstance().controlBottomBrake(false, true);
         }
+
+        // Hack to update ArmDisplay for controlling 1 motor
+        if (m_doTopNotBot) {
+            ArmSubsystem.getInstance().setAngles(
+                ArmSubsystem.getInstance().getBotPosition(), 
+                m_angleSetpointRad, 
+                0, 0);
+        } else {
+            ArmSubsystem.getInstance().setAngles(
+                m_angleSetpointRad, 
+                ArmSubsystem.getInstance().getTopPosition(), 
+                0, 0);
+        }
+        ArmSubsystem.getInstance().stopMotors();
+        
     }
 
     // Called every time the scheduler runs while the command is scheduled.
@@ -47,6 +62,8 @@ public class ControlSingleArm extends Command {
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {
+        ArmSubsystem.getInstance().stopMotors();
+
         if (m_doTopNotBot) {
             ArmPneumaticsSubsystem.getInstance().controlTopBrake(true, true);
         } else {

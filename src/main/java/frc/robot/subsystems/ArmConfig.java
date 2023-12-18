@@ -14,8 +14,8 @@ public class ArmConfig {
     public static final boolean TOP_SET_INVERTED = true;
     public static final boolean BOT_SET_INVERTED = true;
 
-    public static final int BOT_CURRENT_LIMIT = 40;
-    public static final int TOP_CURRENT_LIMIT = 40;
+    public static final int BOT_CURRENT_LIMIT = 30;
+    public static final int TOP_CURRENT_LIMIT = 60;
 
     public static final double BOT_MOTOR_GEARING = 62.5;
     public static final double TOP_MOTOR_GEARING = 60;
@@ -36,31 +36,31 @@ public class ArmConfig {
      */
     public static final boolean BOT_ENC_INVERT = true;
     public static final double BOT_ENC_GEAR_RATIO = 1.0; // Encoder is 1:1 with output shaft
-    public static final double BOT_ENC_OFFSET = 50.2;
+    public static final double BOT_ENC_OFFSET = Math.toRadians(50.2);
     public static final double BOT_POS_CONV_FACTOR = 2 * Math.PI / BOT_ENC_GEAR_RATIO;
-    public static final double BOT_VEL_CONV_FACTOR = BOT_POS_CONV_FACTOR / 60.0;
+    public static final double BOT_VEL_CONV_FACTOR = BOT_POS_CONV_FACTOR; // / 60.0;
 
     public static final boolean TOP_ENC_INVERT = false;
     public static final double TOP_ENC_GEAR_RATIO = 1.0; // Encoder is 1:1 with output shaft
-    public static final double TOP_ENC_OFFSET = 285;
+    public static final double TOP_ENC_OFFSET = Math.toRadians(285);
     public static final double TOP_POS_CONV_FACTOR = 2 * Math.PI / TOP_ENC_GEAR_RATIO;
-    public static final double TOP_VEL_CONV_FACTOR = TOP_POS_CONV_FACTOR / 60.0;
+    public static final double TOP_VEL_CONV_FACTOR = TOP_POS_CONV_FACTOR;// / 60.0;
 
     /**
      * ProfiledPidController settings
      */
-    public static final double BOT_MAX_VEL = Math.PI * 6;
-    public static final double BOT_MAX_ACCEL = Math.PI * 6;
+    public static final double BOT_MAX_VEL = Math.toRadians(90); 
+    public static final double BOT_MAX_ACCEL = Math.toRadians(50);
 
-    public static final double TOP_MAX_VEL = Math.PI * 6;
-    public static final double TOP_MAX_ACCEL = Math.PI * 6;
+    public static final double TOP_MAX_VEL = Math.toRadians(100);
+    public static final double TOP_MAX_ACCEL = Math.toRadians(500);
 
-    public static final double BOT_KP = 0.3;
-    public static final double BOT_KI = 0.01;
+    public static final double BOT_KP = 0;
+    public static final double BOT_KI = 0;
     public static final double BOT_KD = 0;
 
-    public static final double TOP_KP = 0;
-    public static final double TOP_KI = 0;
+    public static final double TOP_KP = 1.1;
+    public static final double TOP_KI = 0.1;
     public static final double TOP_KD = 0;
 
     /**
@@ -68,11 +68,11 @@ public class ArmConfig {
      */
     // Real Robot values:
     public static final SimpleMotorFeedforward BOT_SIMPLE_FF = new SimpleMotorFeedforward(0, 0, 0);
-    public static final SimpleMotorFeedforward TOP_SIMPLE_FF = new SimpleMotorFeedforward(0, 0, 0);
+    public static final SimpleMotorFeedforward TOP_SIMPLE_FF = new SimpleMotorFeedforward(0.001, 0.8, 0.1);
 
     // Simulation FF values:
-    // public static final SimpleMotorFeedforward BOT_SIMPLE_FF = new SimpleMotorFeedforward(0, 1.25, 0.06);
-    // public static final SimpleMotorFeedforward TOP_SIMPLE_FF = new SimpleMotorFeedforward(0, 1.23, 0.02);
+//     public static final SimpleMotorFeedforward BOT_SIMPLE_FF = new SimpleMotorFeedforward(0, 1.25, 0.06);
+//     public static final SimpleMotorFeedforward TOP_SIMPLE_FF = new SimpleMotorFeedforward(0, 1.23, 0.02);
 
 
     /**

@@ -10,6 +10,7 @@ import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
+import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.REVPhysicsSim;
 import com.revrobotics.SparkMaxAbsoluteEncoder;
 import com.revrobotics.SparkMaxPIDController;
@@ -26,13 +27,12 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.lib2706.SubsystemChecker;
-import frc.lib.lib2706.UpdateFeedforward;
 import frc.lib.lib2706.SubsystemChecker.SubsystemType;
+import frc.lib.lib2706.UpdateFeedforward;
 import frc.robot.Config;
 import frc.robot.Config.CANID;
 import frc.robot.subsystems.ArmConfig.ArmFeedforward;
@@ -65,6 +65,7 @@ public class ArmSubsystem extends SubsystemBase {
   private DoublePublisher pubBotPos, pubBotVel, pubTopPos, pubTopVel;
   private DoublePublisher pubBotPosSet, pubTopPosSet;
   private DoublePublisher pubBotPosProSet, pubBotVelProSet, pubTopPosProSet, pubTopVelProSet;
+  private DoublePublisher pubBotAccelSet, pubTopAccelSet;
 
 
   
@@ -115,11 +116,19 @@ public class ArmSubsystem extends SubsystemBase {
     errSpark(() -> m_botEncoder.setPositionConversionFactor(ArmConfig.BOT_POS_CONV_FACTOR));
     errSpark(() -> m_botEncoder.setVelocityConversionFactor(ArmConfig.BOT_VEL_CONV_FACTOR));
     errSpark(() -> m_botEncoder.setInverted(ArmConfig.BOT_ENC_INVERT));
+    errSpark(() -> m_botEncoder.setZeroOffset(ArmConfig.BOT_ENC_OFFSET));
 
     m_topEncoder = m_topSpark.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
     errSpark(() -> m_topEncoder.setPositionConversionFactor(ArmConfig.TOP_POS_CONV_FACTOR));
     errSpark(() -> m_topEncoder.setVelocityConversionFactor(ArmConfig.TOP_VEL_CONV_FACTOR));
     errSpark(() -> m_topEncoder.setInverted(ArmConfig.TOP_ENC_INVERT));
+    errSpark(() -> m_topEncoder.setZeroOffset(ArmConfig.TOP_ENC_OFFSET));
+
+    errSpark(() -> m_botSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20));
+    errSpark(() -> m_topSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20));
+
+    errSpark(() -> m_botSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 20));
+    errSpark(() -> m_topSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 20));
 
     /**
      * Setup SparkMaxPidControllers
@@ -163,12 +172,13 @@ public class ArmSubsystem extends SubsystemBase {
     pubBotPosSet = botTable.getDoubleTopic("Pos Setpoint Deg").publish(PubSubOption.periodic(0.02));
     pubBotPosProSet = botTable.getDoubleTopic("Pos ProfileSetpoint Deg").publish(PubSubOption.periodic(0.02));
     pubBotVelProSet = botTable.getDoubleTopic("Vel ProfileSetpoint DegPerSec").publish(PubSubOption.periodic(0.02));
+    pubBotAccelSet = botTable.getDoubleTopic("Accel ProfileSetpoint DegPerSecPerSec").publish(PubSubOption.periodic(0.02));
     
-
     pubTopPosSet = topTable.getDoubleTopic("Pos Setpoint Deg").publish(PubSubOption.periodic(0.02));
     pubTopPosProSet = topTable.getDoubleTopic("Pos ProfileSetpoint Deg").publish(PubSubOption.periodic(0.02));
     pubTopVelProSet = topTable.getDoubleTopic("Vel ProfuleSetpoint DegPerSec").publish(PubSubOption.periodic(0.02));
-
+    pubTopAccelSet = topTable.getDoubleTopic("Accel ProfileSetpoint DegPerSecPerSec").publish(PubSubOption.periodic(0.02));
+    
     /**
      * Setup SimpleMotorFeedforward
      */
@@ -188,8 +198,6 @@ public class ArmSubsystem extends SubsystemBase {
       ArmConfig.TOP_SIMPLE_FF.ks, 
       ArmConfig.TOP_SIMPLE_FF.kv, 
       ArmConfig.TOP_SIMPLE_FF.ka);
-
-      System.out.println("TABLE NAME: " + topTable.getPath() + "/topFF");
     
 
     /**
@@ -243,6 +251,16 @@ public class ArmSubsystem extends SubsystemBase {
 
     double acceleration = (m_botPid.getSetpoint().velocity - lastBotSpeed) / (MathSharedStore.getTimestamp() - lastBotTime);
     
+    // if (Math.copySign(m_botPid.getSetpoint().velocity, acceleration) != acceleration) {
+
+    // If vel and accel have opposite signs, we are currently deccelerating.
+    // if (m_botPid.getSetpoint().velocity * acceleration < 0) {
+    //   if (m_botPid.getSetpoint().velocity > ArmConfig.TOP_MAX_VEL/2) {
+    //     acceleration *= 8 * getBotVel() / ArmConfig.TOP_MAX_VEL + 1;
+    //   }
+    // }
+
+
     prevBotVoltage = pidVal
         + m_botFF.calculate(m_botPid.getSetpoint().velocity, acceleration)
         + calculateGravFFBot(false);
@@ -254,6 +272,7 @@ public class ArmSubsystem extends SubsystemBase {
 
     pubBotPosProSet.accept(Math.toDegrees(m_botPid.getSetpoint().position));
     pubBotVelProSet.accept(Math.toDegrees(m_botPid.getSetpoint().velocity));
+    pubBotAccelSet.accept(Math.toDegrees(acceleration));
   }
 
   /**
@@ -273,7 +292,7 @@ public class ArmSubsystem extends SubsystemBase {
 
     prevTopVoltage = pidVal
         + m_topFF.calculate(m_topPid.getSetpoint().velocity, acceleration)
-        + calculateGravFFTop(false);
+        + calculateGravFFTop(false); //, getBotPosition(), m_topPid.getSetpoint().position);
 
     m_topSpark.setVoltage(prevTopVoltage);
 
@@ -282,6 +301,7 @@ public class ArmSubsystem extends SubsystemBase {
 
     pubTopPosProSet.accept(Math.toDegrees(m_topPid.getSetpoint().position));
     pubTopVelProSet.accept(Math.toDegrees(m_topPid.getSetpoint().velocity));
+    pubTopAccelSet.accept(Math.toDegrees(acceleration));
   }
 
 
@@ -330,11 +350,11 @@ public class ArmSubsystem extends SubsystemBase {
    * @return Velocity in rad/s
    */
   public double getTopVel() {
-    if (!RobotBase.isSimulation()) {
+    // if (!RobotBase.isSimulation()) {
       return m_topEncoder.getVelocity();
-    } else {
-      return ArmSimulation.ARM_TOP_SIM.getVelocityRadPerSec();
-    }
+    // } else {
+    //   return ArmSimulation.ARM_TOP_SIM.getVelocityRadPerSec();
+    // }
   }
 
   /**
@@ -346,23 +366,37 @@ public class ArmSubsystem extends SubsystemBase {
   public void resetProfiledPIDControllers() {
     m_botPid.reset(getBotPosition(), getBotVel());
     m_topPid.reset(getTopPosition(), getTopVel());
+
+    lastBotSpeed = getBotVel();
+    lastBotTime = MathSharedStore.getTimestamp();
+    lastTopSpeed = getTopVel();
+    lastTopTime = MathSharedStore.getTimestamp();
   }
 
   private double calculateGravFFBot(boolean haveCone) {
-    double topAtHorizontal = getTopPosition() - (Math.PI - getBotPosition());
-    double bottomArmMoment = ArmFeedforward.BOT_FORCE * (ArmFeedforward.LENGTH_BOT_TO_COG*Math.cos(getBotPosition()));
-    double topArmMoment = ArmFeedforward.TOP_FORCE * (ArmConfig.BOT_LENGTH*Math.cos(getBotPosition()) + ArmFeedforward.LENGTH_TOP_TO_COG*Math.cos(topAtHorizontal));
+    return calculateGravFFBot(haveCone, getBotPosition(), getTopPosition());
+  }
+
+  private double calculateGravFFBot(boolean haveCone, double botAngle, double topAngle) {
+    double topAtHorizontal = topAngle - (Math.PI - botAngle);
+    double bottomArmMoment = ArmFeedforward.BOT_FORCE * (ArmFeedforward.LENGTH_BOT_TO_COG*Math.cos(botAngle));
+    double topArmMoment = ArmFeedforward.TOP_FORCE * (ArmConfig.BOT_LENGTH*Math.cos(botAngle) + ArmFeedforward.LENGTH_TOP_TO_COG*Math.cos(topAtHorizontal));
 
     if (haveCone == false) {
       return (bottomArmMoment + topArmMoment) * ArmFeedforward.BOT_MOMENT_TO_VOLTAGE;
     } else {
-      double coneMoment = ArmFeedforward.CONE_FORCE * (ArmConfig.BOT_LENGTH*Math.cos(getBotPosition()) + ArmConfig.TOP_LENGTH*Math.cos(topAtHorizontal));
+      double coneMoment = ArmFeedforward.CONE_FORCE * (ArmConfig.BOT_LENGTH*Math.cos(botAngle) + ArmConfig.TOP_LENGTH*Math.cos(topAtHorizontal));
       return (bottomArmMoment + topArmMoment + coneMoment) * ArmFeedforward.BOT_MOMENT_TO_VOLTAGE;
     }
   }
 
   private double calculateGravFFTop(boolean haveCone) {
-    double topAtHorizontal = getTopPosition() - (Math.PI - getBotPosition());
+    return calculateGravFFTop(haveCone, getBotPosition(), getTopPosition());
+  }
+
+
+  private double calculateGravFFTop(boolean haveCone, double botAngle, double topAngle) {
+    double topAtHorizontal = topAngle - (Math.PI - botAngle);
     double voltsAtHorizontal = haveCone ? ArmFeedforward.TOP_HORIZONTAL_VOLTAGE_CONE : ArmFeedforward.TOP_HORIZONTAL_VOLTAGE_NOCONE;
     return voltsAtHorizontal * Math.cos(topAtHorizontal);
   }

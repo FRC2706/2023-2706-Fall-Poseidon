@@ -73,6 +73,16 @@ public class ArmPneumaticsSubsystem  extends SubsystemBase{
         return runOnce(() -> controlTopBrake(brakeOn, true));
     }
 
+    public Command getToggleBottomCommand() {
+        return startEnd(() -> controlBottomBrake(false, true),
+                        () -> controlBottomBrake(true, true));
+    }
+
+    public Command getToggleTopCommand() {
+        return startEnd(() -> controlTopBrake(false, true),
+                        () -> controlTopBrake(true, true));
+    }
+
     @Override
     public void periodic() {
         // This method will be called once per scheduler run

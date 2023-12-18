@@ -51,14 +51,14 @@ public class PoseidonContainer extends RobotContainer {
    */
   public PoseidonContainer() {
     // Setup default commands
-    s_Swerve.setDefaultCommand(
-        new TeleopSwerve(
-            s_Swerve,
-            () -> -driver.getRawAxis(translationAxis),
-            () -> -driver.getRawAxis(strafeAxis),
-            () -> -driver.getRawAxis(rotationAxis)
-        )
-    );
+    // s_Swerve.setDefaultCommand(
+    //     new TeleopSwerve(
+    //         s_Swerve,
+    //         () -> -driver.getRawAxis(translationAxis),
+    //         () -> -driver.getRawAxis(strafeAxis),
+    //         () -> -driver.getRawAxis(rotationAxis)
+    //     )
+    // );
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -71,27 +71,27 @@ public class PoseidonContainer extends RobotContainer {
     CommandXboxController driver = new CommandXboxController(0);
     CommandXboxController operator = new CommandXboxController (1);
     /* Driver Controls */
-    driver.a().onTrue(new InstantCommand(() -> s_Swerve.zeroGyro()));
+    // driver.a().onTrue(new InstantCommand(() -> s_Swerve.zeroGyro()));
     
-    //ArmPneumaticsSubsystem commands
-    // X - Remove Top Brake
-    driver.leftBumper().onTrue(new RemoveTopBrake());
-    // Y - Add Top Brake
-    driver.leftTrigger().onTrue(new AddTopBrake());
+    // //ArmPneumaticsSubsystem commands
+    // // X - Remove Top Brake
+    // driver.leftBumper().onTrue(new RemoveTopBrake());
+    // // Y - Add Top Brake
+    // driver.leftTrigger().onTrue(new AddTopBrake());
 
-    // A - Remove Bottom Brake
-    driver.rightBumper().onTrue(new RemoveBottomBrake());
-    // B - Add Bottom Brake
-    driver.rightTrigger().onTrue(new AddBottomBrake());
+    // // A - Remove Bottom Brake
+    // driver.rightBumper().onTrue(new RemoveBottomBrake());
+    // // B - Add Bottom Brake
+    // driver.rightTrigger().onTrue(new AddBottomBrake());
 
-    // X - Turn off both gripper solenoids electronically
-    driver.x().onTrue(GripperSubsystem.getInstance().stopCommand());
-    // Y - No Pressure
-    driver.y().onTrue(GripperSubsystem.getInstance().noPressureCommand());
-    // A - Low Pressure
-    driver.a().onTrue(GripperSubsystem.getInstance().lowPressureCommand());
-    // B - High Pressure
-    driver.b().onTrue(GripperSubsystem.getInstance().highPressureCommand());
+    // // X - Turn off both gripper solenoids electronically
+    // driver.x().onTrue(GripperSubsystem.getInstance().stopCommand());
+    // // Y - No Pressure
+    // driver.y().onTrue(GripperSubsystem.getInstance().noPressureCommand());
+    // // A - Low Pressure
+    // driver.a().onTrue(GripperSubsystem.getInstance().lowPressureCommand());
+    // // B - High Pressure
+    // driver.b().onTrue(GripperSubsystem.getInstance().highPressureCommand());
 
 
     /* Operator Controls */
@@ -109,18 +109,16 @@ public class PoseidonContainer extends RobotContainer {
 
     // operator.b().whileTrue(Commands.run(() -> 
     //     ArmSubsystem.getInstance().setAngles(
-    //       Math.toRadians(45), 
+    //       Math.toRadiglans(45), 
     //       Math.toRadians(180), 0, 0), 
     //       ArmSubsystem.getInstance()))
     //   .onTrue(Commands.runOnce(ArmSubsystem.getInstance()::resetProfiledPIDControllers))
     //   .onFalse(Commands.runOnce(ArmSubsystem.getInstance()::stopMotors));
 
     // Control the brakes
-    operator.leftTrigger().onTrue(ArmPneumaticsSubsystem.getInstance().getBottomBrakeCommand(true))
-                          .onFalse(ArmPneumaticsSubsystem.getInstance().getBottomBrakeCommand(false));
+    operator.leftTrigger().toggleOnTrue(ArmPneumaticsSubsystem.getInstance().getToggleBottomCommand());
 
-    operator.rightTrigger().onTrue(ArmPneumaticsSubsystem.getInstance().getTopBrakeCommand(true))
-                           .onFalse(ArmPneumaticsSubsystem.getInstance().getTopBrakeCommand(false));
+    operator.rightTrigger().toggleOnTrue(ArmPneumaticsSubsystem.getInstance().getToggleTopCommand());
 
     
     operator.a().whileTrue(new ControlSingleArm(true, Math.toRadians(90)));
