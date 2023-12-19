@@ -8,6 +8,7 @@ import static frc.lib.lib2706.ErrorCheck.errSpark;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
@@ -99,15 +100,14 @@ public class ArmSubsystem extends SubsystemBase {
     errSpark(() -> m_botSpark.setIdleMode(IdleMode.kBrake));
     errSpark(() -> m_topSpark.setIdleMode(IdleMode.kBrake));
     
-    errSpark(() -> m_botSpark.setSoftLimit(SoftLimitDirection.kForward, ArmConfig.BOT_FORW_LIMIT));
-    errSpark(() -> m_botSpark.setSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOT_REV_LIMIT));
-    errSpark(() -> m_botSpark.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.BOT_SOFT_LIMIT_ENABLE));
-    errSpark(() -> m_botSpark.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOT_SOFT_LIMIT_ENABLE));
+    errSpark(() -> m_botSpark.enableVoltageCompensation(ArmConfig.BOT_VOLTAGE_COMP));
+    errSpark(() -> m_topSpark.enableVoltageCompensation(ArmConfig.TOP_VOLTAGE_COMP));
 
-    errSpark(() -> m_topSpark.setSoftLimit(SoftLimitDirection.kForward, ArmConfig.TOP_FORW_LIMIT));
-    errSpark(() -> m_topSpark.setSoftLimit(SoftLimitDirection.kReverse, ArmConfig.TOP_REV_LIMIT));
-    errSpark(() -> m_topSpark.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.TOP_SOFT_LIMIT_ENABLE));
-    errSpark(() -> m_topSpark.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.TOP_SOFT_LIMIT_ENABLE));
+    /**
+     * Setup SparkMaxPidControllers
+     */
+    m_botSparkPid = m_botSpark.getPIDController();
+    m_topSparkPid = m_topSpark.getPIDController();
 
     /**
      * Setup Absolute Encoders
@@ -124,20 +124,29 @@ public class ArmSubsystem extends SubsystemBase {
     errSpark(() -> m_topEncoder.setInverted(ArmConfig.TOP_ENC_INVERT));
     errSpark(() -> m_topEncoder.setZeroOffset(ArmConfig.TOP_ENC_OFFSET));
 
+    // Set status frame to get absolute encoder position every 20 ms
     errSpark(() -> m_botSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20));
     errSpark(() -> m_topSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20));
 
+    // Set status frame to get absolute encoder velocity every 20 ms
     errSpark(() -> m_botSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 20));
     errSpark(() -> m_topSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 20));
 
-    /**
-     * Setup SparkMaxPidControllers
-     */
-    m_botSparkPid = m_botSpark.getPIDController();
-    m_topSparkPid = m_topSpark.getPIDController();
-
     errSpark(() -> m_botSparkPid.setFeedbackDevice(m_botEncoder));
     errSpark(() -> m_topSparkPid.setFeedbackDevice(m_topEncoder));
+
+    /**
+     * Setup soft limits after encoder
+     */
+    errSpark(() -> m_botSpark.setSoftLimit(SoftLimitDirection.kForward, ArmConfig.BOT_FORW_LIMIT));
+    errSpark(() -> m_botSpark.setSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOT_REV_LIMIT));
+    errSpark(() -> m_botSpark.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.BOT_SOFT_LIMIT_ENABLE));
+    errSpark(() -> m_botSpark.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOT_SOFT_LIMIT_ENABLE));
+
+    errSpark(() -> m_topSpark.setSoftLimit(SoftLimitDirection.kForward, ArmConfig.TOP_FORW_LIMIT));
+    errSpark(() -> m_topSpark.setSoftLimit(SoftLimitDirection.kReverse, ArmConfig.TOP_REV_LIMIT));
+    errSpark(() -> m_topSpark.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.TOP_SOFT_LIMIT_ENABLE));
+    errSpark(() -> m_topSpark.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.TOP_SOFT_LIMIT_ENABLE));
 
     /**
      * Create the ArmDisplay
@@ -156,6 +165,9 @@ public class ArmSubsystem extends SubsystemBase {
     m_topPid = new ProfiledPIDController(
         ArmConfig.TOP_KP, ArmConfig.TOP_KI, ArmConfig.TOP_KD, 
         new Constraints(ArmConfig.TOP_MAX_VEL, ArmConfig.TOP_MAX_ACCEL));
+
+    m_botPid.setIZone(ArmConfig.BOT_IZONE);
+    m_topPid.setIZone(ArmConfig.TOP_IZONE);
 
     /**
      * Setup networktables
@@ -250,16 +262,6 @@ public class ArmSubsystem extends SubsystemBase {
             botVel));
 
     double acceleration = (m_botPid.getSetpoint().velocity - lastBotSpeed) / (MathSharedStore.getTimestamp() - lastBotTime);
-    
-    // if (Math.copySign(m_botPid.getSetpoint().velocity, acceleration) != acceleration) {
-
-    // If vel and accel have opposite signs, we are currently deccelerating.
-    // if (m_botPid.getSetpoint().velocity * acceleration < 0) {
-    //   if (m_botPid.getSetpoint().velocity > ArmConfig.TOP_MAX_VEL/2) {
-    //     acceleration *= 8 * getBotVel() / ArmConfig.TOP_MAX_VEL + 1;
-    //   }
-    // }
-
 
     prevBotVoltage = pidVal
         + m_botFF.calculate(m_botPid.getSetpoint().velocity, acceleration)
@@ -290,6 +292,12 @@ public class ArmSubsystem extends SubsystemBase {
 
     double acceleration = (m_topPid.getSetpoint().velocity - lastTopSpeed) / (MathSharedStore.getTimestamp() - lastTopTime);
 
+    // If deccelerating and velocity is high, allow more deccelerating.
+    if (acceleration * m_topPid.getSetpoint().velocity <= 0 && 
+        Math.abs(m_topPid.getSetpoint().velocity) > ArmConfig.BOT_MAX_VEL*0.5) {
+      acceleration *= 1.5;
+    }
+
     prevTopVoltage = pidVal
         + m_topFF.calculate(m_topPid.getSetpoint().velocity, acceleration)
         + calculateGravFFTop(false); //, getBotPosition(), m_topPid.getSetpoint().position);
@@ -312,7 +320,7 @@ public class ArmSubsystem extends SubsystemBase {
    */
   public double getBotPosition() {
     if (!RobotBase.isSimulation()) {
-      return m_botEncoder.getPosition();
+      return m_botEncoder.getPosition() - Math.toRadians(10);
     } else {
       return ArmSimulation.ARM_BOT_SIM.getAngleRads();
     }
@@ -350,11 +358,11 @@ public class ArmSubsystem extends SubsystemBase {
    * @return Velocity in rad/s
    */
   public double getTopVel() {
-    // if (!RobotBase.isSimulation()) {
+    if (!RobotBase.isSimulation()) {
       return m_topEncoder.getVelocity();
-    // } else {
-    //   return ArmSimulation.ARM_TOP_SIM.getVelocityRadPerSec();
-    // }
+    } else {
+      return ArmSimulation.ARM_TOP_SIM.getVelocityRadPerSec();
+    }
   }
 
   /**
@@ -463,5 +471,16 @@ public class ArmSubsystem extends SubsystemBase {
         ArmSimulation.ARM_TOP_SIM.getCurrentDrawAmps()));
   }
 
+  public void testFeedForwardTop(double additionalVoltage) {
+    double voltage = additionalVoltage + calculateGravFFTop(false);
+    m_topSparkPid.setReference(voltage, ControlType.kVoltage);
+    System.out.println("Voltage set: " + voltage);
+  }
+
+  public void testFeedForwardBot(double additionalVoltage) {
+    double voltage = additionalVoltage + calculateGravFFBot(false);
+    m_botSparkPid.setReference(voltage, ControlType.kVoltage);
+    System.out.println("Voltage set: " + voltage);
+  }
 
 }

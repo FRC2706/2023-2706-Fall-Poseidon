@@ -14,11 +14,14 @@ public class ArmConfig {
     public static final boolean TOP_SET_INVERTED = true;
     public static final boolean BOT_SET_INVERTED = true;
 
-    public static final int BOT_CURRENT_LIMIT = 30;
-    public static final int TOP_CURRENT_LIMIT = 60;
+    public static final int BOT_CURRENT_LIMIT = 80;
+    public static final int TOP_CURRENT_LIMIT = 80;
 
     public static final double BOT_MOTOR_GEARING = 62.5;
     public static final double TOP_MOTOR_GEARING = 60;
+
+    public static final double BOT_VOLTAGE_COMP = 7;
+    public static final double TOP_VOLTAGE_COMP = 7;
 
     /*
      * Soft limits
@@ -28,15 +31,15 @@ public class ArmConfig {
     public static final boolean TOP_SOFT_LIMIT_ENABLE = true;
 
     public static final float BOT_FORW_LIMIT = (float) Math.toRadians(135);
-    public static final float BOT_REV_LIMIT = (float) Math.toRadians(40);
-    public static final boolean BOT_SOFT_LIMIT_ENABLE = true;
+    public static final float BOT_REV_LIMIT = (float) Math.toRadians(45);
+    public static final boolean BOT_SOFT_LIMIT_ENABLE = false;
 
     /**
      * Encoder details
      */
     public static final boolean BOT_ENC_INVERT = true;
     public static final double BOT_ENC_GEAR_RATIO = 1.0; // Encoder is 1:1 with output shaft
-    public static final double BOT_ENC_OFFSET = Math.toRadians(50.2);
+    public static final double BOT_ENC_OFFSET = Math.toRadians(50.2 -10);
     public static final double BOT_POS_CONV_FACTOR = 2 * Math.PI / BOT_ENC_GEAR_RATIO;
     public static final double BOT_VEL_CONV_FACTOR = BOT_POS_CONV_FACTOR; // / 60.0;
 
@@ -52,23 +55,25 @@ public class ArmConfig {
     public static final double BOT_MAX_VEL = Math.toRadians(90); 
     public static final double BOT_MAX_ACCEL = Math.toRadians(50);
 
-    public static final double TOP_MAX_VEL = Math.toRadians(100);
-    public static final double TOP_MAX_ACCEL = Math.toRadians(500);
+    public static final double TOP_MAX_VEL = Math.toRadians(400);
+    public static final double TOP_MAX_ACCEL = Math.toRadians(700);
 
-    public static final double BOT_KP = 0;
-    public static final double BOT_KI = 0;
+    public static final double BOT_KP = 1.4;
+    public static final double BOT_KI = 1.4;
     public static final double BOT_KD = 0;
+    public static final double BOT_IZONE = Math.toRadians(6);
 
-    public static final double TOP_KP = 1.1;
-    public static final double TOP_KI = 0.1;
+    public static final double TOP_KP = 2.4;
+    public static final double TOP_KI = 2.6;
     public static final double TOP_KD = 0;
+    public static final double TOP_IZONE = Math.toRadians(6);
 
     /**
      * Angular velocity feedforward
      */
     // Real Robot values:
-    public static final SimpleMotorFeedforward BOT_SIMPLE_FF = new SimpleMotorFeedforward(0, 0, 0);
-    public static final SimpleMotorFeedforward TOP_SIMPLE_FF = new SimpleMotorFeedforward(0.001, 0.8, 0.1);
+    public static final SimpleMotorFeedforward BOT_SIMPLE_FF = new SimpleMotorFeedforward(0.001, 0, 0);
+    public static final SimpleMotorFeedforward TOP_SIMPLE_FF = new SimpleMotorFeedforward(0.001, 1.05, 0.15) ;
 
     // Simulation FF values:
 //     public static final SimpleMotorFeedforward BOT_SIMPLE_FF = new SimpleMotorFeedforward(0, 1.25, 0.06);
@@ -94,9 +99,9 @@ public class ArmConfig {
         /**
          * Gravity Compensation
          */
-        public static final double TOP_HORIZONTAL_VOLTAGE_NOCONE = 1.5;
-        public static final double TOP_HORIZONTAL_VOLTAGE_CONE = 2.3;
-        public static final double BOT_MOMENT_TO_VOLTAGE = 0.000005;
+        public static final double TOP_HORIZONTAL_VOLTAGE_NOCONE = 2.3;
+        public static final double TOP_HORIZONTAL_VOLTAGE_CONE = 2.3 * 2.3/1.5;
+        public static final double BOT_MOMENT_TO_VOLTAGE = 0.00001;
 
         public static final double LENGTH_BOT_TO_COG = 14.56;
         public static final double LENGTH_TOP_TO_COG = 28.22;

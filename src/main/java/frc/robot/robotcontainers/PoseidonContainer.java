@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
+import frc.robot.commands.ArmTestLimits;
 import frc.robot.commands.ControlSingleArm;
 import frc.robot.commands.SetBottomArm;
 import frc.robot.commands.SyncArmEncoders;
@@ -121,14 +122,17 @@ public class PoseidonContainer extends RobotContainer {
     operator.rightTrigger().toggleOnTrue(ArmPneumaticsSubsystem.getInstance().getToggleTopCommand());
 
     
-    operator.a().whileTrue(new ControlSingleArm(true, Math.toRadians(90)));
-    operator.b().whileTrue(new ControlSingleArm(true, Math.toRadians(135)));
-    operator.y().whileTrue(new ControlSingleArm(true, Math.toRadians(180)));
+    // operator.a().whileTrue(new ControlSingleArm(true, Math.toRadians(90)));
+    // operator.b().whileTrue(new ControlSingleArm(true, Math.toRadians(135)));
+    // operator.y().whileTrue(new ControlSingleArm(true, Math.toRadians(180)));
 
-    // operator.a().whileTrue(new ControlSingleArm(false, Math.toRadians(10)));
-    // operator.b().whileTrue(new ControlSingleArm(false, Math.toRadians(30)));
-    // operator.y().whileTrue(new ControlSingleArm(false, Math.toRadians(45)));
+    operator.start().onTrue(GripperSubsystem.getInstance().highPressureCommand());
 
+    operator.a().whileTrue(new ControlSingleArm(false, Math.toRadians(10)));
+    operator.b().whileTrue(new ControlSingleArm(false, Math.toRadians(30)));
+    operator.y().whileTrue(new ControlSingleArm(false, Math.toRadians(45)));
+
+    operator.x().whileTrue(new ArmTestLimits(operator));
   }
 
   /**
