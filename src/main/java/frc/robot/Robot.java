@@ -41,7 +41,6 @@ public class Robot extends TimedRobot {
  
     if (SubsystemChecker.canSubsystemConstruct(SubsystemType.ArmSubsystem)) {
       System.out.println("*****robotInit*****");
-      new WaitCommand(5).andThen(new SyncArmEncoders()).schedule();
       //new WaitCommand(10).andThen(new CheckArmEncodersSync()).schedule();
       new WaitCommand(10).andThen(new ScheduleCommand(new CheckArmEncodersSync())).schedule();
     }

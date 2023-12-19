@@ -70,7 +70,7 @@ public class ArmSubsystem extends SubsystemBase {
   SparkMaxAbsoluteEncoder m_bottomAbsEncoder;
 
   //embedded relative encoder
-  private RelativeEncoder m_bottomEncoder;
+  //private RelativeEncoder m_bottomEncoder;
   public SparkMaxPIDController m_pidControllerBottomArm;  
 
   //for arm pneumatic brakakes 
@@ -99,16 +99,18 @@ public class ArmSubsystem extends SubsystemBase {
     ErrorCheck.errREV(m_bottomArm.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE));
 
     //m_bottomDutyCycleEncoder = new DutyCycleEncoder(ArmConfig.bottom_duty_cycle_channel);
+    //unit: radius
     m_bottomAbsEncoder = m_bottomArm.getAbsoluteEncoder(Type.kDutyCycle);
     m_bottomAbsEncoder.setInverted(true);
-    m_bottomAbsEncoder.setPositionConversionFactor(360);
-    m_bottomAbsEncoder.setZeroOffset(0);
+    m_bottomAbsEncoder.setPositionConversionFactor(2*Math.PI);
+    m_bottomAbsEncoder.setVelocityConversionFactor(2*Math.PI/60.0);
+    m_bottomAbsEncoder.setZeroOffset(Math.toRadians(52));
 
 
-    m_bottomEncoder = m_bottomArm.getEncoder();
+    //m_bottomEncoder = m_bottomArm.getEncoder();
     //position in radius
-    ErrorCheck.errREV(m_bottomEncoder.setPositionConversionFactor(ArmConfig.bottomArmPositionConversionFactor));
-    ErrorCheck.errREV(m_bottomEncoder.setVelocityConversionFactor(ArmConfig.bottomArmVelocityConversionFactor));
+    //ErrorCheck.errREV(m_bottomEncoder.setPositionConversionFactor(ArmConfig.bottomArmPositionConversionFactor));
+    //ErrorCheck.errREV(m_bottomEncoder.setVelocityConversionFactor(ArmConfig.bottomArmVelocityConversionFactor));
 
     m_pidControllerBottomArm = m_bottomArm.getPIDController();
     m_pidControllerBottomArm.setFeedbackDevice(m_bottomAbsEncoder);
@@ -153,7 +155,7 @@ public class ArmSubsystem extends SubsystemBase {
                                           */
     //to do: could be moved to another spot
     updatePIDSettings();
-    updateFromAbsoluteBottom();
+    //updateFromAbsoluteBottom();
   }
 
   public void updatePIDSettings() {
@@ -167,10 +169,9 @@ public class ArmSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    double bottomPosition = m_bottomEncoder.getPosition();
+    m_bottomArmPosPub.accept(Math.toDegrees(m_bottomAbsEncoder.getPosition()));
+    m_bottomArmVelPub.accept(m_bottomAbsEncoder.getVelocity());
 
-    m_bottomArmPosPub.accept(Math.toDegrees(bottomPosition));
-    m_bottomArmVelPub.accept(m_bottomEncoder.getVelocity());
     m_bottomAbsoluteEncoder.accept(Math.toDegrees(getAbsoluteBottom()));
 
     // This method will be called once per scheduler run
@@ -199,7 +200,7 @@ public class ArmSubsystem extends SubsystemBase {
 
   //return radius
   public double getBottomPosition() {
-    return m_bottomEncoder.getPosition();
+    return m_bottomAbsEncoder.getPosition();
   }
 
   public double getAbsoluteBottom() {
@@ -209,19 +210,19 @@ public class ArmSubsystem extends SubsystemBase {
   //double adjAbsPosition = absPosition-((int) absPosition/360)*360.0;
    //System.out.println("Get abs position(degree) " + absPosition);
    //System.out.println("adjusted abs position " + adjAbsPosition);
-   return Math.toRadians(m_bottomAbsEncoder.getPosition()-52); //+ m_bottomArmOffset.get());
+   return m_bottomAbsEncoder.getPosition(); //+ m_bottomArmOffset.get());
   }
 
-  public void updateFromAbsoluteBottom() { 
+  //public void updateFromAbsoluteBottom() { 
     //todo: check REV system error
-    ErrorCheck.errREV(m_bottomEncoder.setPosition(getAbsoluteBottom()));
-  }
+    //ErrorCheck.errREV(m_bottomEncoder.setPosition(getAbsoluteBottom()));
+  //}
 
   public boolean areEncodersSynced() {
     System.out.println("*****areEncodersSynced*****");
     boolean syncResult;
       //set sparkmax encoder position
-    updateFromAbsoluteBottom();
+    //updateFromAbsoluteBottom();
     System.out.println("getAbsoluteBottom " + getAbsoluteBottom());
     System.out.println("getBottomPosition " + getBottomPosition());
     syncResult = Math.abs(getAbsoluteBottom() - getBottomPosition()) < ArmConfig.ENCODER_SYNCING_TOLERANCE;
