@@ -93,6 +93,14 @@ public class GripperSubsystem  extends SubsystemBase{
         return this.runOnce(() -> stop());
     }
 
+    public boolean isGripperOpen() {
+        return false;
+    }
+
+    public boolean isGamePieceInPosition() {
+        return false;
+    }
+
     @Override
     public void periodic() {
         // This method will be called once per scheduler run

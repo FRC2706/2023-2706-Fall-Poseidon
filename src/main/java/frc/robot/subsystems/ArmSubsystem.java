@@ -218,6 +218,10 @@ public class ArmSubsystem extends SubsystemBase {
     burnFlash();
   }
 
+  public boolean isArmPickupReady() {
+    return false;
+  }
+
   @Override
   public void periodic() {
     m_botUpdateFF.checkForUpdates();

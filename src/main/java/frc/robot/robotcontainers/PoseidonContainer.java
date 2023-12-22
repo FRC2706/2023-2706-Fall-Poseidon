@@ -10,9 +10,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.commands.ArmTestLimits;
 import frc.robot.commands.ControlSingleArm;
+import frc.robot.commands.GrabGamePiece;
 import frc.robot.commands.SetBottomArm;
 import frc.robot.commands.SyncArmEncoders;
 import frc.robot.commands.TeleopSwerve;
@@ -60,8 +62,12 @@ public class PoseidonContainer extends RobotContainer {
     //         () -> -driver.getRawAxis(rotationAxis)
     //     )
     // );
+
     // Configure the button bindings
     configureButtonBindings();
+
+    // Configure automatic commands
+    configureAutomationCommands();
   }
 
   /**
@@ -133,6 +139,18 @@ public class PoseidonContainer extends RobotContainer {
     operator.y().whileTrue(new ControlSingleArm(false, Math.toRadians(45)));
 
     operator.x().whileTrue(new ArmTestLimits(operator));
+  }
+
+  private void configureAutomationCommands() {
+    Trigger armInPickupPosition = new Trigger(ArmSubsystem.getInstance()::isArmPickupReady);
+    Trigger gripperIsOpen = new Trigger(GripperSubsystem.getInstance()::isGripperOpen);
+    Trigger gripperHasGamePieceReady = new Trigger(GripperSubsystem.getInstance()::isGamePieceInPosition);
+
+    armInPickupPosition
+        .and(gripperIsOpen)
+        .and(gripperHasGamePieceReady)
+        .debounce(0.06)
+        .onTrue(new GrabGamePiece());    
   }
 
   /**
