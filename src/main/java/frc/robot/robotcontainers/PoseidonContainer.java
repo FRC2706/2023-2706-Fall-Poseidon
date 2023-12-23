@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.commands.ArmTestLimits;
 import frc.robot.commands.ControlSingleArm;
-import frc.robot.commands.GrabGamePiece;
+import frc.robot.commands.GrabGamePieceCommand;
 import frc.robot.commands.SetBottomArm;
 import frc.robot.commands.SyncArmEncoders;
 import frc.robot.commands.TeleopSwerve;
@@ -150,7 +150,7 @@ public class PoseidonContainer extends RobotContainer {
         .and(gripperIsOpen)
         .and(gripperHasGamePieceReady)
         .debounce(0.06)
-        .onTrue(new GrabGamePiece());    
+        .onTrue(new GrabGamePieceCommand());    
   }
 
   /**

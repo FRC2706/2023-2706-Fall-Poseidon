@@ -6,7 +6,6 @@ package frc.robot.subsystems;
 
 import static frc.lib.lib2706.ErrorCheck.errSpark;
 
-import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -44,7 +43,7 @@ public class ArmSubsystem extends SubsystemBase {
 
   private final CANSparkMax m_botSpark, m_topSpark;
   private final SparkMaxPIDController m_botSparkPid, m_topSparkPid;
-  private final AbsoluteEncoder m_botEncoder, m_topEncoder;
+  private final SparkMaxAbsoluteEncoder m_botEncoder, m_topEncoder;
   
   private final ProfiledPIDController m_botPid, m_topPid;
 
