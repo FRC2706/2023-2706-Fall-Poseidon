@@ -10,12 +10,13 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Config;
 
@@ -68,7 +69,7 @@ public class SwerveSubsystem extends SubsystemBase {
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Config.Swerve.maxSpeed);
 
     for (SwerveModule mod : mSwerveMods) {
-      mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
+      mod.setDesiredState(swerveModuleStates[mod.getModuleNumber()], isOpenLoop);
     }
   }
 
@@ -77,7 +78,7 @@ public class SwerveSubsystem extends SubsystemBase {
     SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Config.Swerve.maxSpeed);
 
     for (SwerveModule mod : mSwerveMods) {
-      mod.setDesiredState(desiredStates[mod.moduleNumber], false);
+      mod.setDesiredState(desiredStates[mod.getModuleNumber()], false);
     }
   }
 
@@ -92,7 +93,7 @@ public class SwerveSubsystem extends SubsystemBase {
   public SwerveModuleState[] getStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
     for (SwerveModule mod : mSwerveMods) {
-      states[mod.moduleNumber] = mod.getState();
+      states[mod.getModuleNumber()] = mod.getState();
     }
     return states;
   }
@@ -100,7 +101,7 @@ public class SwerveSubsystem extends SubsystemBase {
   public SwerveModulePosition[] getPositions() {
     SwerveModulePosition[] positions = new SwerveModulePosition[4];
     for (SwerveModule mod : mSwerveMods) {
-      positions[mod.moduleNumber] = mod.getPosition();
+      positions[mod.getModuleNumber()] = mod.getPosition();
     }
     return positions;
   }
@@ -129,6 +130,9 @@ public class SwerveSubsystem extends SubsystemBase {
     currentAngleEntry.accept(getPose().getRotation().getDegrees());
     currentPositionXEntry.accept(getPose().getX());
     currentPositionYEntry.accept(getPose().getY());
-    NetworkTableInstance.getDefault().flush();
+  }
+
+  public Command getResetOdometryCommand(Pose2d pose) {
+    return Commands.runOnce(() -> resetOdometry(pose));
   }
 }
