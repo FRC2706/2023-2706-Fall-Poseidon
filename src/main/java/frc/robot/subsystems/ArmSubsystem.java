@@ -85,9 +85,6 @@ public class ArmSubsystem extends SubsystemBase {
   private double m_topVoltageConversion;
 
 
-  //duty cycle encoder
-  //private DutyCycleEncoder m_bottomDutyCycleEncoder;
-
   //spark max absolute encoder
   SparkMaxAbsoluteEncoder m_bottomAbsEncoder;
   SparkMaxAbsoluteEncoder m_topAbsEncoder;
@@ -97,8 +94,6 @@ public class ArmSubsystem extends SubsystemBase {
   public SparkMaxPIDController m_pidControllerBottomArm;  
   public SparkMaxPIDController m_pidControllerTopArm;
 
-  //for arm pneumatic brakakes 
-  //DoubleSolenoid brakeSolenoidLow;
 
   public static ArmSubsystem getInstance() { //gets arm subsystem object to control movement
     if (instance == null) {
@@ -133,8 +128,6 @@ public class ArmSubsystem extends SubsystemBase {
     ErrorCheck.errREV(m_topArm.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.TOP_SOFT_LIMIT_ENABLE));
     ErrorCheck.errREV(m_topArm.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.TOP_SOFT_LIMIT_ENABLE));
 
-
-    //m_bottomDutyCycleEncoder = new DutyCycleEncoder(ArmConfig.bottom_duty_cycle_channel);
     //unit: radius
     m_bottomAbsEncoder = m_bottomArm.getAbsoluteEncoder(Type.kDutyCycle);
     m_bottomAbsEncoder.setInverted(true);
@@ -143,22 +136,16 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomAbsEncoder.setZeroOffset(Math.toRadians(52));
 
     m_topAbsEncoder = m_topArm.getAbsoluteEncoder(Type.kDutyCycle);
-    m_topAbsEncoder.setInverted(true);
+    m_topAbsEncoder.setInverted(false);
     m_topAbsEncoder.setPositionConversionFactor(2*Math.PI);
     m_topAbsEncoder.setVelocityConversionFactor(2*Math.PI/60.0);
-    m_topAbsEncoder.setZeroOffset(Math.toRadians(52));
-
-
-    //m_bottomEncoder = m_bottomArm.getEncoder();
-    //position in radius
-    //ErrorCheck.errREV(m_bottomEncoder.setPositionConversionFactor(ArmConfig.bottomArmPositionConversionFactor));
-    //ErrorCheck.errREV(m_bottomEncoder.setVelocityConversionFactor(ArmConfig.bottomArmVelocityConversionFactor));
+    m_topAbsEncoder.setZeroOffset(Math.toRadians(0));
 
     m_pidControllerBottomArm = m_bottomArm.getPIDController();
     m_pidControllerBottomArm.setFeedbackDevice(m_bottomAbsEncoder);
 
     m_pidControllerTopArm = m_topArm.getPIDController();
-    m_pidControllerTopArm.setFeedbackDevice(m_bottomAbsEncoder);
+    m_pidControllerTopArm.setFeedbackDevice(m_topAbsEncoder);
 
     NetworkTable topArmTuningTable = NetworkTableInstance.getDefault().getTable(m_tuningTableTop);
     m_topArmPSubs = topArmTuningTable.getDoubleTopic("P").getEntry(ArmConfig.top_arm_kP);
@@ -166,10 +153,8 @@ public class ArmSubsystem extends SubsystemBase {
     m_topArmDSubs = topArmTuningTable.getDoubleTopic("D").getEntry(ArmConfig.top_arm_kD);
     m_topArmIzSubs = topArmTuningTable.getDoubleTopic("IZone").getEntry(ArmConfig.top_arm_kIz);
     m_topArmFFSubs = topArmTuningTable.getDoubleTopic("FF").getEntry(ArmConfig.top_arm_kFF);
-    m_topArmOffset = topArmTuningTable.getDoubleTopic("Offset").getEntry(ArmConfig.top_arm_offset);
+   //m_topArmOffset = topArmTuningTable.getDoubleTopic("Offset").getEntry(ArmConfig.top_arm_offset);
     momentToVoltageConversion = topArmTuningTable.getDoubleTopic("VoltageConversion").subscribe(m_topVoltageConversion);
-
-
 
     NetworkTable bottomArmTuningTable = NetworkTableInstance.getDefault().getTable(m_tuningTableBottom);
     m_bottomArmPSubs = bottomArmTuningTable.getDoubleTopic("P").getEntry(ArmConfig.bottom_arm_kP);
@@ -177,7 +162,7 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomArmDSubs = bottomArmTuningTable.getDoubleTopic("D").getEntry(ArmConfig.bottom_arm_kD);
     m_bottomArmIzSubs = bottomArmTuningTable.getDoubleTopic("IZone").getEntry(ArmConfig.bottom_arm_kIz);
     m_bottomArmFFSubs = bottomArmTuningTable.getDoubleTopic("FF").getEntry(ArmConfig.bottom_arm_kFF);
-    m_bottomArmOffset = bottomArmTuningTable.getDoubleTopic("Offset").getEntry(ArmConfig.bottom_arm_offset);
+    //m_bottomArmOffset = bottomArmTuningTable.getDoubleTopic("Offset").getEntry(ArmConfig.bottom_arm_offset);
     momentToVoltageConversion = bottomArmTuningTable.getDoubleTopic("VoltageConversion").subscribe(m_bottomVoltageConversion);
 
     m_bottomArmFFSubs.accept(ArmConfig.bottom_arm_kFF);
@@ -185,16 +170,29 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomArmISubs.accept(ArmConfig.bottom_arm_kI);
     m_bottomArmDSubs.accept(ArmConfig.bottom_arm_kD);
     m_bottomArmIzSubs.accept(ArmConfig.bottom_arm_kIz);
-    m_bottomArmOffset.accept(ArmConfig.bottom_arm_offset);
+    //m_bottomArmOffset.accept(ArmConfig.bottom_arm_offset);
 
-    m_bottomArmOffset = bottomArmTuningTable.getDoubleTopic("Offset").getEntry(ArmConfig.bottom_arm_offset);
-    m_bottomArmOffset.accept(ArmConfig.bottom_arm_offset);
+    m_topArmFFSubs.accept(ArmConfig.top_arm_kFF);
+    m_topArmPSubs.accept(ArmConfig.top_arm_kP);
+    m_topArmISubs.accept(ArmConfig.top_arm_kI);
+    m_topArmDSubs.accept(ArmConfig.top_arm_kD);
+    m_topArmIzSubs.accept(ArmConfig.top_arm_kIz);
+
+    //m_bottomArmOffset = bottomArmTuningTable.getDoubleTopic("Offset").getEntry(ArmConfig.bottom_arm_offset);
+    //m_bottomArmOffset.accept(ArmConfig.bottom_arm_offset);
 
     NetworkTable bottomArmDataTable = NetworkTableInstance.getDefault().getTable(m_dataTableBottom);
+    NetworkTable topArmDataTable = NetworkTableInstance.getDefault().getTable(m_dataTableTop);
+
     
     m_bottomArmPosPub = bottomArmDataTable.getDoubleTopic("MeasuredAngle").publish(PubSubOption.periodic(0.02));
     m_bottomAbsoluteEncoder = bottomArmDataTable.getDoubleTopic("Absolute Encoder").publish(PubSubOption.periodic(0.02));
     m_bottomArmVelPub = bottomArmDataTable.getDoubleTopic("Vel").publish(PubSubOption.periodic(0.02));
+
+    m_topArmPosPub = topArmDataTable.getDoubleTopic("MeasuredAngle").publish(PubSubOption.periodic(0.02));
+    m_topAbsoluteEncoder = topArmDataTable.getDoubleTopic("Absolute Encoder").publish(PubSubOption.periodic(0.02));
+    m_topArmVelPub = topArmDataTable.getDoubleTopic("Vel").publish(PubSubOption.periodic(0.02));
+
 
     ErrorCheck.errREV(m_pidControllerBottomArm.setFF(m_bottomArmFFSubs.get()));
     ErrorCheck.errREV(m_pidControllerBottomArm.setP(m_bottomArmPSubs.get()));
@@ -203,11 +201,14 @@ public class ArmSubsystem extends SubsystemBase {
     ErrorCheck.errREV(m_pidControllerBottomArm.setIZone(m_bottomArmIzSubs.get())); 
     ErrorCheck.errREV(m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output));
 
-    /*brakeSolenoidLow = new DoubleSolenoid(Config.CTRE_PCM_CAN_ID,
-                                          PneumaticsModuleType.CTREPCM,
-                                          Config.ARMLOW_PNEUMATIC_FORWARD_CHANNEL,
-                                          Config.ARMLOW_PNEUMATIC_REVERSE_CHANNEL);
-                                          */
+    ErrorCheck.errREV(m_pidControllerTopArm.setFF(m_topArmFFSubs.get()));
+    ErrorCheck.errREV(m_pidControllerTopArm.setP(m_topArmPSubs.get()));
+    ErrorCheck.errREV(m_pidControllerTopArm.setI(m_topArmISubs.get()));
+    ErrorCheck.errREV(m_pidControllerTopArm.setD(m_topArmDSubs.get()));
+    ErrorCheck.errREV(m_pidControllerTopArm.setIZone(m_topArmIzSubs.get())); 
+    ErrorCheck.errREV(m_pidControllerTopArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output));
+
+
     //to do: could be moved to another spot
     updatePIDSettings();
     //updateFromAbsoluteBottom();
@@ -221,12 +222,12 @@ public class ArmSubsystem extends SubsystemBase {
     ErrorCheck.errREV(m_pidControllerBottomArm.setIZone(m_bottomArmIzSubs.get()));
     ErrorCheck.errREV(m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output));
 
-    ErrorCheck.errREV(m_pidControllerBottomArm.setFF(m_topArmFFSubs.get()));
-    ErrorCheck.errREV(m_pidControllerBottomArm.setP(m_topArmPSubs.get()));
-    ErrorCheck.errREV(m_pidControllerBottomArm.setI(m_topArmISubs.get()));
-    ErrorCheck.errREV(m_pidControllerBottomArm.setD(m_topArmDSubs.get()));
-    ErrorCheck.errREV(m_pidControllerBottomArm.setIZone(m_topArmIzSubs.get()));
-    ErrorCheck.errREV(m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output));
+    ErrorCheck.errREV(m_pidControllerTopArm.setFF(m_topArmFFSubs.get()));
+    ErrorCheck.errREV(m_pidControllerTopArm.setP(m_topArmPSubs.get()));
+    ErrorCheck.errREV(m_pidControllerTopArm.setI(m_topArmISubs.get()));
+    ErrorCheck.errREV(m_pidControllerTopArm.setD(m_topArmDSubs.get()));
+    ErrorCheck.errREV(m_pidControllerTopArm.setIZone(m_topArmIzSubs.get()));
+    ErrorCheck.errREV(m_pidControllerTopArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output));
 
   }
   
@@ -235,14 +236,11 @@ public class ArmSubsystem extends SubsystemBase {
   public void periodic() {
     m_bottomArmPosPub.accept(Math.toDegrees(m_bottomAbsEncoder.getPosition()));
     m_bottomArmVelPub.accept(m_bottomAbsEncoder.getVelocity());
-
     m_bottomAbsoluteEncoder.accept(Math.toDegrees(getAbsoluteBottom()));
 
-    m_topArmPosPub.accept(Math.toDegrees(m_bottomAbsEncoder.getPosition()));
-    m_topArmVelPub.accept(m_bottomAbsEncoder.getVelocity());
-
-    m_topAbsoluteEncoder.accept(Math.toDegrees(getAbsoluteBottom()));
-
+    m_topArmPosPub.accept(Math.toDegrees(m_topAbsEncoder.getPosition()));
+    m_topArmVelPub.accept(m_topAbsEncoder.getVelocity());
+    m_topAbsoluteEncoder.accept(Math.toDegrees(getAbsoluteTop()));
 
     // This method will be called once per scheduler run
   }
@@ -258,7 +256,7 @@ public class ArmSubsystem extends SubsystemBase {
   }
 
   public void setTopJointAngle(double angle_top) {
-    if (angle_top<Math.toRadians(0) || angle_top>Math.toRadians(95)) {
+    if (angle_top<Math.toRadians(85) || angle_top>Math.toRadians(95)) {
       angle_top = Math.toRadians(95);
     }
     //setReference angle is in radians)
