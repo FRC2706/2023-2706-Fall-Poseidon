@@ -25,6 +25,9 @@ import frc.lib.lib3512.util.CANSparkMaxUtil.Usage;
 import frc.robot.Config;
 import frc.robot.Robot;
 
+/**
+ * A SwerveModule class to represent a 2 CANSParkmax and 1 CANCoder swerve module.
+ */
 public class SwerveModule {
 
   private NetworkTable swerveModuleTable;
@@ -183,7 +186,7 @@ public class SwerveModule {
     driveEncoder.setPosition(0.0);
   }
 
-  /*
+  /**
    * Set the speed of the drive motor
    * 
    * @param desiredState The SwerveModuleState containing the desired speed
@@ -219,26 +222,45 @@ public class SwerveModule {
   }
 
   /**
-   * Returns Angle
+   * Get the angle of the module from the integrated NEO encoder
    * 
-   * @return An
+   * @return Rotation2d of the angle of the module
    */
   private Rotation2d getAngle() {
-    return (new Rotation2d(integratedAngleEncoder.getPosition()));
+    return new Rotation2d(integratedAngleEncoder.getPosition());
   }
 
+  /**
+   * Get the angle of the module from the CANCoder.
+   * 
+   * @return Rotation2d of the angle of the module
+   */
   public Rotation2d getCanCoder() {
     return Rotation2d.fromDegrees(angleEncoder.getAbsolutePosition());
   }
 
+  /**
+   * Get the speed in m/s and angle of the module.
+   * 
+   * @return A {@link SwerveModuleState} containing the speed and angle.
+   */
   public SwerveModuleState getState() {
     return new SwerveModuleState(driveEncoder.getVelocity(), getAngle());
   }
 
+  /**
+   * Get the position in meters and angle of the module.
+   * 
+   * @return A {@link SwerveModulePosition} containing the position and angle.
+   */
   public SwerveModulePosition getPosition() {
     return new SwerveModulePosition(driveEncoder.getPosition(), getAngle());
   }
 
+  /**
+   * A periodic function to update NetworkTables.
+   * Must be called in the periodic of the SwerveSubsystem.
+   */
   public void periodic() {
     //update network tables
 
