@@ -5,6 +5,7 @@
 
 package frc.robot.robotcontainers;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -60,8 +61,9 @@ public class PoseidonContainer extends RobotContainer {
    */
   private void configureButtonBindings() {
     /* Driver Controls */
-    driver.a().onTrue(new InstantCommand(() -> s_Swerve.zeroGyro()));
-    
+    driver.start().onTrue(SwerveSubsystem.getInstance().setHeadingCommand(new Rotation2d(0)));
+    driver.back().whileTrue(SwerveSubsystem.getInstance().lockWheelsInX());
+
     //ArmPneumaticsSubsystem commands
     // X - Remove Top Brake
     driver.leftBumper().onTrue(new RemoveTopBrake());

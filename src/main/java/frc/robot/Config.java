@@ -143,7 +143,7 @@ public final class Config {
             new Translation2d(-wheelBase / 2.0, -trackWidth / 2.0));
 
     /* Swerve Voltage Compensation Changed */
-    public static final double voltageComp = 12.0;
+    public static final double voltageComp = 11.0;
 
     /* Swerve Current Limiting, Changed */
     public static final int angleContinuousCurrentLimit = 20;

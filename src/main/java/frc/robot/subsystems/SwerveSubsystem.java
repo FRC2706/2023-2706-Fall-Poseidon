@@ -1,11 +1,14 @@
 package frc.robot.subsystems;
 
+import java.util.Optional;
+
 import com.ctre.phoenix.sensors.PigeonIMU;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -14,9 +17,15 @@ import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
+import edu.wpi.first.networktables.PubSubOptions;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.lib2706.AdvantageUtil;
+import frc.lib.lib2706.PoseBuffer;
 import frc.robot.Config;
 
 public class SwerveSubsystem extends SubsystemBase {
@@ -26,9 +35,10 @@ public class SwerveSubsystem extends SubsystemBase {
   private SwerveModule[] mSwerveMods;
   String tableName = "SwerveChassis";
   private NetworkTable swerveTable = NetworkTableInstance.getDefault().getTable(tableName);
-  private DoublePublisher currentAngleEntry = swerveTable.getDoubleTopic("Current angle (deg)").publish();
-  private DoublePublisher currentPositionXEntry = swerveTable.getDoubleTopic("Current positionX (m) ").publish();
-  private DoublePublisher currentPositionYEntry = swerveTable.getDoubleTopic("Current positionY (m) ").publish();
+  private DoublePublisher pubCurrentAngle = swerveTable.getDoubleTopic("Current angle (deg)").publish(PubSubOption.periodic(0.02));
+  private DoublePublisher pubCurrentPositionX = swerveTable.getDoubleTopic("Current positionX (m) ").publish(PubSubOption.periodic(0.02));
+  private DoublePublisher pubCurrentPositionY = swerveTable.getDoubleTopic("Current positionY (m) ").publish(PubSubOption.periodic(0.02));
+  private DoubleArrayPublisher pubCurrentPose = swerveTable.getDoubleArrayTopic("Pose ").publish(PubSubOption.periodic(0.02));
 
   // private DoubleArrayPublisher moduleStatePublisher;
   // private DoubleArrayPublisher moduleStatePublisher;
@@ -36,10 +46,20 @@ public class SwerveSubsystem extends SubsystemBase {
   
   private Field2d field;
 
+  private PoseBuffer poseBuffer;
+
+  private static SwerveSubsystem instance;
+  public static SwerveSubsystem getInstance(){
+      if(instance == null){
+          instance = new SwerveSubsystem();
+      }
+      return instance;
+  }
+
   public SwerveSubsystem() {
     gyro = new PigeonIMU(Config.Swerve.pigeonID);
     gyro.configFactoryDefault();
-    zeroGyro();
+    // zeroGyro();
 
     
 
@@ -58,13 +78,12 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public void drive(
-      Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
+      ChassisSpeeds speeds, boolean fieldRelative, boolean isOpenLoop) {
     SwerveModuleState[] swerveModuleStates =
     Config.Swerve.swerveKinematics.toSwerveModuleStates(
-            fieldRelative
-                ? ChassisSpeeds.fromFieldRelativeSpeeds(
-                    translation.getX(), translation.getY(), rotation, getYaw())
-                : new ChassisSpeeds(translation.getX(), translation.getY(), rotation));
+            fieldRelative ? 
+                ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getYaw()) :
+                speeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Config.Swerve.maxSpeed);
 
     for (SwerveModule mod : mSwerveMods) {
@@ -105,14 +124,39 @@ public class SwerveSubsystem extends SubsystemBase {
     return positions;
   }
 
-  public void zeroGyro() {
-    gyro.setYaw(0);
-  }
-
   public Rotation2d getYaw() {
     return (Config.Swerve.invertGyro)
         ? Rotation2d.fromDegrees(360 - gyro.getYaw())
         : Rotation2d.fromDegrees(gyro.getYaw());
+  }
+  
+  public Command setHeadingCommand(Rotation2d rotation2d) {
+    return Commands.runOnce(() -> resetOdometry(new Pose2d(getPose().getTranslation(), rotation2d)));
+  }
+  public Command setOdometryCommand(Pose2d pose) {
+    return Commands.runOnce(() -> resetOdometry(pose));
+  }
+  public Command lockWheelsInX() {
+    return Commands.run(() -> setModuleStates(
+      new SwerveModuleState[]{
+        new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
+        new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+        new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+        new SwerveModuleState(0, Rotation2d.fromDegrees(45))
+      })
+    );
+  }
+
+  /**
+   * Get a pose at the given timestamp. 
+   * Returns an empty Optional if the buffer is empty or doesn't go back far enough.
+   * 
+   * @param timestampSeconds The timestamp for the pose to get, matching WPILib PoseEstimator's 
+   *                         timestamps (which matches PhotonVision and Limelight)
+   * @return An Optional of the Pose2d or an empty Optional.
+   */
+  public Optional<Pose2d> getPoseAtTimestamp(double timestampSeconds) {
+    return(poseBuffer.getPoseAtTimestamp(timestampSeconds));
   }
 
   @Override
@@ -126,9 +170,13 @@ public class SwerveSubsystem extends SubsystemBase {
       mod.periodic();
     }
 
-    currentAngleEntry.accept(getPose().getRotation().getDegrees());
-    currentPositionXEntry.accept(getPose().getX());
-    currentPositionYEntry.accept(getPose().getY());
-    NetworkTableInstance.getDefault().flush();
+    poseBuffer.addPoseToBuffer(getPose());
+
+    pubCurrentAngle.accept(getPose().getRotation().getDegrees());
+    pubCurrentPositionX.accept(getPose().getX());
+    pubCurrentPositionY.accept(getPose().getY());
+    pubCurrentPose.accept(AdvantageUtil.deconstruct(getPose()));
+
+
   }
 }

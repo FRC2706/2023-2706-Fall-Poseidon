@@ -88,6 +88,8 @@ public class SwerveModule {
     currentAngleEntry = swerveModuleTable.getDoubleTopic("Current angle (deg)").publish();
     speedError = swerveModuleTable.getDoubleTopic("Speed error (mps)").publish();
     angleError = swerveModuleTable.getDoubleTopic("Angle error (deg)").publish();
+
+    burnFlash();
   }
 
   public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop) {
@@ -96,6 +98,7 @@ public class SwerveModule {
 
 
     desiredState = OnboardModuleState.optimize(desiredState, getState().angle);
+    desiredState.speedMetersPerSecond *= desiredState.angle.minus(getAngle()).getCos();
 
 
     setAngle(desiredState);
@@ -134,7 +137,7 @@ public class SwerveModule {
     angleController.setI(Config.Swerve.angleKI);
     angleController.setD(Config.Swerve.angleKD);
     angleController.setFF(Config.Swerve.angleKFF);
-    // angleMotor.enableVoltageCompensation(Constants.Swerve.voltageComp);
+    angleMotor.enableVoltageCompensation(Config.Swerve.voltageComp);
     resetToAbsolute();
     angleMotor.burnFlash();
   }
@@ -151,9 +154,22 @@ public class SwerveModule {
     driveController.setI(Config.Swerve.angleKI);
     driveController.setD(Config.Swerve.angleKD);
     driveController.setFF(Config.Swerve.angleKFF);
-    // driveMotor.enableVoltageCompensation(Constants.Swerve.voltageComp);
+    driveMotor.enableVoltageCompensation(Config.Swerve.voltageComp);
     driveMotor.burnFlash();
     driveEncoder.setPosition(0.0);
+  }
+
+  /**
+   * Save the configurations from flash to EEPROM.
+   */
+  public void burnFlash() {
+    try {
+      Thread.sleep(200);
+    } 
+    catch (Exception e) {}
+
+    driveMotor.burnFlash();
+    angleMotor.burnFlash();
   }
 
   /*
