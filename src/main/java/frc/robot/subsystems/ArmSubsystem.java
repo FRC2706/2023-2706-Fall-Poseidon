@@ -32,7 +32,7 @@ import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.lib2706.SubsystemChecker;
 import frc.lib.lib2706.SubsystemChecker.SubsystemType;
-import frc.lib.lib2706.UpdateFeedforward;
+import frc.lib.lib2706.UpdateSimpleFeedforward;
 import frc.robot.Config;
 import frc.robot.Config.CANID;
 import frc.robot.subsystems.ArmConfig.ArmFeedforward;
@@ -51,8 +51,8 @@ public class ArmSubsystem extends SubsystemBase {
 
   private SimpleMotorFeedforward m_botFF;
   private SimpleMotorFeedforward m_topFF;
-  private UpdateFeedforward m_botUpdateFF;
-  private UpdateFeedforward m_topUpdateFF;
+  private UpdateSimpleFeedforward m_botUpdateFF;
+  private UpdateSimpleFeedforward m_topUpdateFF;
 
   private double lastBotSpeed = 0;
   private double lastTopSpeed = 0;
@@ -196,16 +196,16 @@ public class ArmSubsystem extends SubsystemBase {
     m_botFF = ArmConfig.BOT_SIMPLE_FF;
     m_topFF = ArmConfig.TOP_SIMPLE_FF;
 
-    m_botUpdateFF = new UpdateFeedforward(
+    m_botUpdateFF = new UpdateSimpleFeedforward(
       (ff) -> m_botFF = ff, 
-      botTable.getPath() + "/botFF", 
+      botTable, 
       ArmConfig.BOT_SIMPLE_FF.ks, 
       ArmConfig.BOT_SIMPLE_FF.kv, 
       ArmConfig.BOT_SIMPLE_FF.ka);
 
-    m_topUpdateFF = new UpdateFeedforward(
+    m_topUpdateFF = new UpdateSimpleFeedforward(
       (ff) -> m_topFF = ff, 
-      topTable.getPath() + "/topFF", 
+      topTable, 
       ArmConfig.TOP_SIMPLE_FF.ks, 
       ArmConfig.TOP_SIMPLE_FF.kv, 
       ArmConfig.TOP_SIMPLE_FF.ka);

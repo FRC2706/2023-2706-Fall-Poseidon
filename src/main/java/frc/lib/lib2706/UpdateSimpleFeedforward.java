@@ -5,11 +5,10 @@ import java.util.function.Consumer;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 
-public class UpdateFeedforward {
-    private final double UPDATE_RATE = 200; // in ms
+public class UpdateSimpleFeedforward {
+    private final double UPDATE_RATE_MS = 200; // in ms
     private Consumer<SimpleMotorFeedforward> m_setFeedforward;
     private DoubleEntry entryKS, entryKV, entryKA;
     private double prevKS, prevKV, prevKA;
@@ -23,16 +22,16 @@ public class UpdateFeedforward {
      * @param kV The default value for kV
      * @param kA The default value for kA
      */
-    public UpdateFeedforward(Consumer<SimpleMotorFeedforward> setFeedforward, String tableName, double kS, double kV, double kA) {
+    public UpdateSimpleFeedforward(Consumer<SimpleMotorFeedforward> setFeedforward, NetworkTable table, double kS, double kV, double kA) {
         m_setFeedforward = setFeedforward;
         prevKS = kS;
         prevKV = kV;
         prevKA = kA;
-
-        NetworkTable table = NetworkTableInstance.getDefault().getTable(tableName);
-        entryKS = table.getDoubleTopic("kS").getEntry(kS, PubSubOption.periodic(UPDATE_RATE));
-        entryKV = table.getDoubleTopic("kV").getEntry(kV, PubSubOption.periodic(UPDATE_RATE));
-        entryKA = table.getDoubleTopic("kA").getEntry(kA, PubSubOption.periodic(UPDATE_RATE));
+        
+        NetworkTable ffTable = table.getSubTable("TuneSimpleFF");
+        entryKS = ffTable.getDoubleTopic("KS").getEntry(kS, PubSubOption.periodic(UPDATE_RATE_MS));
+        entryKV = ffTable.getDoubleTopic("KV").getEntry(kV, PubSubOption.periodic(UPDATE_RATE_MS));
+        entryKA = ffTable.getDoubleTopic("kA").getEntry(kA, PubSubOption.periodic(UPDATE_RATE_MS));
 
         // Publish an initial value to the entry so there's something there.
         if (!entryKS.exists()) {
@@ -40,6 +39,9 @@ public class UpdateFeedforward {
             entryKV.setDefault(kV);
             entryKA.setDefault(kA);
         }
+
+        // Set the initial feedforward to the defaults or to previously set values on networktables
+        m_setFeedforward.accept(new SimpleMotorFeedforward(entryKS.get(), entryKV.get(), entryKA.get()));
     }
 
     /**
@@ -67,5 +69,4 @@ public class UpdateFeedforward {
             m_setFeedforward.accept(new SimpleMotorFeedforward(prevKS, prevKV, prevKA));
         }
     }
-
 }
