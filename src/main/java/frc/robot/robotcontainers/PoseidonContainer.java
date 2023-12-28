@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
 import frc.robot.commands.SetBottomArm;
+import frc.robot.commands.SetTopArm;
 import frc.robot.commands.SyncArmEncoders;
 import frc.robot.commands.ArmPneumaticsCommands.*;
 import frc.robot.subsystems.GripperSubsystem;
@@ -70,9 +71,10 @@ public class PoseidonContainer extends RobotContainer {
 
 
     /* Operator Controls */
-    operator.a().onTrue(new SetBottomArm(90));
-    operator.b().onTrue(new SetBottomArm(80));
-    operator.y().onTrue(new SyncArmEncoders());
+    //operator.a().onTrue(new SetBottomArm(90));
+    //operator.b().onTrue(new SetBottomArm(80));
+    operator.x().onTrue(new SetTopArm(85));
+    operator.y().onTrue(new SetTopArm(120));
   
   }
 

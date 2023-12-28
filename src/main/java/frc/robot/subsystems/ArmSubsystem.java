@@ -139,7 +139,7 @@ public class ArmSubsystem extends SubsystemBase {
     m_topAbsEncoder.setInverted(false);
     m_topAbsEncoder.setPositionConversionFactor(2*Math.PI);
     m_topAbsEncoder.setVelocityConversionFactor(2*Math.PI/60.0);
-    m_topAbsEncoder.setZeroOffset(Math.toRadians(0));
+    m_topAbsEncoder.setZeroOffset(Math.toRadians(286));
 
     m_pidControllerBottomArm = m_bottomArm.getPIDController();
     m_pidControllerBottomArm.setFeedbackDevice(m_bottomAbsEncoder);
@@ -256,12 +256,12 @@ public class ArmSubsystem extends SubsystemBase {
   }
 
   public void setTopJointAngle(double angle_top) {
-    if (angle_top<Math.toRadians(85) || angle_top>Math.toRadians(95)) {
-      angle_top = Math.toRadians(95);
+    if (angle_top<Math.toRadians(80) || angle_top>Math.toRadians(125)) {
+      angle_top = Math.toRadians(90);
     }
     //setReference angle is in radians)
     //todo: tune FF 
-    m_pidControllerBottomArm.setReference((angle_top), ControlType.kPosition, 0,0.1);
+    m_pidControllerTopArm.setReference((angle_top), ControlType.kPosition, 0,0.1);
   }
 
   /*public void controlBottomArmBrake( boolean bBrakeOn) {

@@ -28,9 +28,9 @@ public class ArmConfig {
     public static final double max_output = 1;
 
     //unfinalized top values
-    public static final double top_arm_kP = 1.4;
-    public static final double top_arm_kI = 0.0003;
-    public static final double top_arm_kD = 0.9;
+    public static final double top_arm_kP = 1.6;
+    public static final double top_arm_kI = 0.002;
+    public static final double top_arm_kD = 40;
     public static final double top_arm_kIz = 0.3;
     public static final double top_arm_kFF = 0;
 
