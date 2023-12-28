@@ -34,13 +34,19 @@ public class ErrorCheck {
      * @return true for success, false for failure.
      */
     public static boolean errSpark(Supplier<REVLibError> config) {
+        REVLibError err = REVLibError.kOk;
         for (int i = 0; i < MAXIMUM_RETRIES; i++) {
-            if (config.get() == REVLibError.kOk) {
+            err = config.get();
+            if (err == REVLibError.kOk) {
                 return true;
             }
         }
 
-        DriverStation.reportError("CANSparkMax failed to configure setting. See stack trace.", true);
+        DriverStation.reportError(String.format(
+            "CANSparkMax failed to configure setting. Error: %s \nSee stack trace.", 
+            err.toString()), 
+            true);
+            
         return false;
     }
 
