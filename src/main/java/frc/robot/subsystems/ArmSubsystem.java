@@ -29,6 +29,7 @@ import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
+import edu.wpi.first.networktables.Topic;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -40,10 +41,14 @@ public class ArmSubsystem extends SubsystemBase {
 
   private static final MotorType motorType = MotorType.kBrushless; //defines brushless motortype
   public final CANSparkMax m_bottomArm; //bottom SparkMax motor controller
+  public final CANSparkMax m_topArm; //bottom SparkMax motor controller
+
   
   //network table entry
   private final String m_tuningTableBottom = "Arm/BottomArmTuning";
   private final String m_dataTableBottom = "Arm/BottomArmData";
+  private final String m_tuningTableTop = "Arm/TopArmTuning";
+  private final String m_dataTableTop = "Arm/TopArmData";
   
   //network table entries for bottom arm
   private DoubleEntry m_bottomArmPSubs;
@@ -59,19 +64,38 @@ public class ArmSubsystem extends SubsystemBase {
   private DoublePublisher m_bottomAbsoluteEncoder;
   private DoublePublisher m_bottomArmPosPub;
 
+  //network tables entries for top arm 
+  private DoubleEntry m_topArmPSubs;
+  private DoubleEntry m_topArmISubs;
+  private DoubleEntry m_topArmDSubs;
+  private DoubleEntry m_topArmIzSubs;
+  private DoubleEntry m_topArmFFSubs;
+  private DoublePublisher m_topArmSetpointPub;   
+  private DoublePublisher m_topArmVelPub;
+  private DoubleEntry m_topArmMomentToVoltage;
+  private DoublePublisher m_topArmFFTestingVolts;
+  private DoubleEntry m_topArmOffset;
+  private DoublePublisher m_topAbsoluteEncoder;
+  private DoublePublisher m_topArmPosPub;
+
   //for bottom arm ff
   private DoubleSubscriber momentToVoltageConversion;
   private double m_bottomVoltageConversion;
+  //for top arm ff 
+  private double m_topVoltageConversion;
+
 
   //duty cycle encoder
   //private DutyCycleEncoder m_bottomDutyCycleEncoder;
 
   //spark max absolute encoder
   SparkMaxAbsoluteEncoder m_bottomAbsEncoder;
+  SparkMaxAbsoluteEncoder m_topAbsEncoder;
 
   //embedded relative encoder
   //private RelativeEncoder m_bottomEncoder;
   public SparkMaxPIDController m_pidControllerBottomArm;  
+  public SparkMaxPIDController m_pidControllerTopArm;
 
   //for arm pneumatic brakakes 
   //DoubleSolenoid brakeSolenoidLow;
@@ -98,6 +122,18 @@ public class ArmSubsystem extends SubsystemBase {
     ErrorCheck.errREV(m_bottomArm.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE));
     ErrorCheck.errREV(m_bottomArm.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.BOTTOM_SOFT_LIMIT_ENABLE));
 
+    m_topArm = new CANSparkMax(Config.CANID.TOP_ARM_SPARK_CAN_ID, motorType);
+    ErrorCheck.errREV(m_topArm.restoreFactoryDefaults());
+    ErrorCheck.errREV(m_topArm.setSmartCurrentLimit(ArmConfig.CURRENT_LIMIT));
+    m_topArm.setInverted(ArmConfig.TOP_SET_INVERTED);
+    ErrorCheck.errREV(m_topArm.setIdleMode(IdleMode.kBrake));
+
+    ErrorCheck.errREV(m_topArm.setSoftLimit(SoftLimitDirection.kForward, ArmConfig.top_arm_forward_limit));
+    ErrorCheck.errREV(m_topArm.setSoftLimit(SoftLimitDirection.kReverse, ArmConfig.top_arm_reverse_limit));
+    ErrorCheck.errREV(m_topArm.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.TOP_SOFT_LIMIT_ENABLE));
+    ErrorCheck.errREV(m_topArm.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.TOP_SOFT_LIMIT_ENABLE));
+
+
     //m_bottomDutyCycleEncoder = new DutyCycleEncoder(ArmConfig.bottom_duty_cycle_channel);
     //unit: radius
     m_bottomAbsEncoder = m_bottomArm.getAbsoluteEncoder(Type.kDutyCycle);
@@ -105,6 +141,12 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomAbsEncoder.setPositionConversionFactor(2*Math.PI);
     m_bottomAbsEncoder.setVelocityConversionFactor(2*Math.PI/60.0);
     m_bottomAbsEncoder.setZeroOffset(Math.toRadians(52));
+
+    m_topAbsEncoder = m_topArm.getAbsoluteEncoder(Type.kDutyCycle);
+    m_topAbsEncoder.setInverted(true);
+    m_topAbsEncoder.setPositionConversionFactor(2*Math.PI);
+    m_topAbsEncoder.setVelocityConversionFactor(2*Math.PI/60.0);
+    m_topAbsEncoder.setZeroOffset(Math.toRadians(52));
 
 
     //m_bottomEncoder = m_bottomArm.getEncoder();
@@ -114,6 +156,19 @@ public class ArmSubsystem extends SubsystemBase {
 
     m_pidControllerBottomArm = m_bottomArm.getPIDController();
     m_pidControllerBottomArm.setFeedbackDevice(m_bottomAbsEncoder);
+
+    m_pidControllerTopArm = m_topArm.getPIDController();
+    m_pidControllerTopArm.setFeedbackDevice(m_bottomAbsEncoder);
+
+    NetworkTable topArmTuningTable = NetworkTableInstance.getDefault().getTable(m_tuningTableTop);
+    m_topArmPSubs = topArmTuningTable.getDoubleTopic("P").getEntry(ArmConfig.top_arm_kP);
+    m_topArmISubs = topArmTuningTable.getDoubleTopic("I").getEntry(ArmConfig.top_arm_kI);
+    m_topArmDSubs = topArmTuningTable.getDoubleTopic("D").getEntry(ArmConfig.top_arm_kD);
+    m_topArmIzSubs = topArmTuningTable.getDoubleTopic("IZone").getEntry(ArmConfig.top_arm_kIz);
+    m_topArmFFSubs = topArmTuningTable.getDoubleTopic("FF").getEntry(ArmConfig.top_arm_kFF);
+    m_topArmOffset = topArmTuningTable.getDoubleTopic("Offset").getEntry(ArmConfig.top_arm_offset);
+    momentToVoltageConversion = topArmTuningTable.getDoubleTopic("VoltageConversion").subscribe(m_topVoltageConversion);
+
 
 
     NetworkTable bottomArmTuningTable = NetworkTableInstance.getDefault().getTable(m_tuningTableBottom);
@@ -165,7 +220,16 @@ public class ArmSubsystem extends SubsystemBase {
     ErrorCheck.errREV(m_pidControllerBottomArm.setD(m_bottomArmDSubs.get()));
     ErrorCheck.errREV(m_pidControllerBottomArm.setIZone(m_bottomArmIzSubs.get()));
     ErrorCheck.errREV(m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output));
+
+    ErrorCheck.errREV(m_pidControllerBottomArm.setFF(m_topArmFFSubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setP(m_topArmPSubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setI(m_topArmISubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setD(m_topArmDSubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setIZone(m_topArmIzSubs.get()));
+    ErrorCheck.errREV(m_pidControllerBottomArm.setOutputRange(ArmConfig.min_output, ArmConfig.max_output));
+
   }
+  
 
   @Override
   public void periodic() {
@@ -173,6 +237,12 @@ public class ArmSubsystem extends SubsystemBase {
     m_bottomArmVelPub.accept(m_bottomAbsEncoder.getVelocity());
 
     m_bottomAbsoluteEncoder.accept(Math.toDegrees(getAbsoluteBottom()));
+
+    m_topArmPosPub.accept(Math.toDegrees(m_bottomAbsEncoder.getPosition()));
+    m_topArmVelPub.accept(m_bottomAbsEncoder.getVelocity());
+
+    m_topAbsoluteEncoder.accept(Math.toDegrees(getAbsoluteBottom()));
+
 
     // This method will be called once per scheduler run
   }
@@ -185,6 +255,15 @@ public class ArmSubsystem extends SubsystemBase {
     //setReference angle is in radians)
     //todo: tune FF 
     m_pidControllerBottomArm.setReference((angle_bottom), ControlType.kPosition, 0,0.1);
+  }
+
+  public void setTopJointAngle(double angle_top) {
+    if (angle_top<Math.toRadians(0) || angle_top>Math.toRadians(95)) {
+      angle_top = Math.toRadians(95);
+    }
+    //setReference angle is in radians)
+    //todo: tune FF 
+    m_pidControllerBottomArm.setReference((angle_top), ControlType.kPosition, 0,0.1);
   }
 
   /*public void controlBottomArmBrake( boolean bBrakeOn) {
@@ -202,6 +281,9 @@ public class ArmSubsystem extends SubsystemBase {
   public double getBottomPosition() {
     return m_bottomAbsEncoder.getPosition();
   }
+  public double getTopPosition() {
+    return m_topAbsEncoder.getPosition();
+  }
 
   public double getAbsoluteBottom() {
     //getAbsolutePosition() return in [0,1]
@@ -211,6 +293,10 @@ public class ArmSubsystem extends SubsystemBase {
    //System.out.println("Get abs position(degree) " + absPosition);
    //System.out.println("adjusted abs position " + adjAbsPosition);
    return m_bottomAbsEncoder.getPosition(); //+ m_bottomArmOffset.get());
+  }
+
+  public double getAbsoluteTop() {
+    return m_topAbsEncoder.getPosition();
   }
 
   //public void updateFromAbsoluteBottom() { 
@@ -227,12 +313,20 @@ public class ArmSubsystem extends SubsystemBase {
     System.out.println("getBottomPosition " + getBottomPosition());
     syncResult = Math.abs(getAbsoluteBottom() - getBottomPosition()) < ArmConfig.ENCODER_SYNCING_TOLERANCE;
     System.out.println("******SyncIteration****** " + "******Result******"  + syncResult);
+
+    System.out.println("getAbsoluteTop " + getAbsoluteTop());
+    System.out.println("getTopPosition " + getTopPosition());
+    syncResult = Math.abs(getAbsoluteTop() - getTopPosition()) < ArmConfig.ENCODER_SYNCING_TOLERANCE;
+    System.out.println("******SyncIteration****** " + "******Result******"  + syncResult);
+
     return syncResult; 
   }
   public void stopMotors() {
     m_bottomArm.stopMotor();
+    m_topArm.stopMotor();
   }
   public void burnFlash() {
     ErrorCheck.errREV(m_bottomArm.burnFlash());
+    ErrorCheck.errREV(m_topArm.burnFlash());
   }
 }
