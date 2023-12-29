@@ -9,31 +9,57 @@ import edu.wpi.first.wpilibj.DriverStation;
 
 public class ErrorCheck {
     private static final int MAXIMUM_RETRIES = 5;
+    private static final boolean PRINT_STACK_TRACE = false;
+    private static final boolean PRINT_STACK_TRACE_CONFIGURE = true;
 
-    public static boolean errREV(REVLibError error) {
+    /**
+     * Handle checking if a REVLibError is ok or needs to be printed to the console.
+     * 
+     * @param message A simple and short identifying message
+     * @param error The error to check
+     * @return True for no error, false means there is an error. Boolean can be ignored if not needed.
+     */
+    public static boolean errSpark(String message, REVLibError error) {
         if (error == REVLibError.kOk) {
             return true;
         }
-        DriverStation.reportError("REV DEVICE Error" + error.toString(), true);
+        DriverStation.reportError(
+            String.format(
+                "[MergeError] - CANSparkMax error. MergeMessage: %s. Spark error code: %s.",
+                error.toString()), 
+            PRINT_STACK_TRACE);
         return false;
     }
 
-    public static boolean errCTRE(ErrorCode error) {
+    /**
+     * Handle checking if a CTRE device error is ok or needs to be printed to the console.
+     * 
+     * @param message A simple and short identifying message
+     * @param error The error to check
+     * @return True for no error, false means there is an error. Boolean can be ignored if not needed.
+     */
+    public static boolean errCTRE(String message, ErrorCode error) {
         if (error == ErrorCode.OK) {
             return true;
         }
 
-        DriverStation.reportError("CTRE Device Error: " + error.toString(), true);
+        DriverStation.reportError(
+            String.format(
+                "[MergeError] - CTRE device error. MergeMessage: %s. CTRE error code: %s.",
+                message,
+                error.toString()), 
+            PRINT_STACK_TRACE);
         return false;
     }
 
     /**
      * Configure a SparkMax setting multiple times until it succeeds.
      * 
+     * @param message A simple and short identifying message.
      * @param config The Supplier to call to configure which returns a REVLibError.
      * @return true for success, false for failure.
      */
-    public static boolean errSpark(Supplier<REVLibError> config) {
+    public static boolean configureSpark(String message, Supplier<REVLibError> config) {
         REVLibError err = REVLibError.kOk;
         for (int i = 0; i < MAXIMUM_RETRIES; i++) {
             err = config.get();
@@ -43,9 +69,10 @@ public class ErrorCheck {
         }
 
         DriverStation.reportError(String.format(
-            "CANSparkMax failed to configure setting. Error: %s \nSee stack trace.", 
+            "[MergeError] - CANSparkMax failed to configure setting. MergeMessage: %s. Spark error code: %s \nSee stack trace below.", 
+            message,
             err.toString()), 
-            true);
+            PRINT_STACK_TRACE_CONFIGURE);
             
         return false;
     }
