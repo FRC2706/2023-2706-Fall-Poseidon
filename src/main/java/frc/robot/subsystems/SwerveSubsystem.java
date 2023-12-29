@@ -54,6 +54,10 @@ public class SwerveSubsystem extends SubsystemBase {
   double currentRotation;
   double desiredRotation;
 
+  /**
+   * Counter to synchronize the modules relative encoder with absolute encoder when not moving.
+   */
+  private int moduleSynchronizationCounter = 0;
   
   private Field2d field;
 
@@ -233,8 +237,19 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveOdometry.update(getYaw(), tempGetPositions);
     field.setRobotPose(getPose());
 
+    double sumVelocity = 0;
     for (SwerveModule mod : mSwerveMods) {
       mod.periodic();
+      
+      sumVelocity += Math.abs(mod.getState().speedMetersPerSecond);
+    }
+
+    // If the robot isn't moving synchronize the encoders every 100ms (Inspired by democrat's SDS
+    // lib)
+    // To ensure that everytime we initialize it works.
+    if (sumVelocity <= .01 && ++moduleSynchronizationCounter > 5) {
+      synchronizeModuleEncoders();
+      moduleSynchronizationCounter = 0;
     }
 
     poseBuffer.addPoseToBuffer(getPose());
@@ -256,6 +271,14 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public ChassisSpeeds getRobotRelativeSpeeds() {
     return Config.Swerve.swerveKinematics.toChassisSpeeds(getStates());
+  }
+
+  public void synchronizeModuleEncoders()
+  {
+    for (SwerveModule module : mSwerveMods)
+    {
+      module.queueSynchronizeEncoders();
+    }
   }
 
 }

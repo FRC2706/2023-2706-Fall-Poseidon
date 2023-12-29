@@ -52,6 +52,8 @@ public class SwerveModule {
   private final SparkMaxPIDController driveController;
   private final SparkMaxPIDController angleController;
 
+  private boolean synchronizeEncoderQueued = false;
+
   private SimpleMotorFeedforward feedforward =
       new SimpleMotorFeedforward(
         Config.Swerve.driveKS, Config.Swerve.driveKV, Config.Swerve.driveKA);
@@ -246,5 +248,13 @@ public class SwerveModule {
     currentAngleEntry.accept(getAngle().getRadians());
     angleOffset = new Rotation2d(entryAngleOffset.get());
     updateFeedforward.checkForUpdates();
+  }
+
+    public void queueSynchronizeEncoders()
+  {
+    if (driveEncoder != null)
+    {
+      synchronizeEncoderQueued = true;
+    }
   }
 }
