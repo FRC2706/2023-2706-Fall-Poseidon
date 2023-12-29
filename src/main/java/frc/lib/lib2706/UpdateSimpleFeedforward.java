@@ -7,6 +7,7 @@ import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.PubSubOption;
 
+
 public class UpdateSimpleFeedforward {
     private final double UPDATE_RATE_MS = 200; // in ms
     private Consumer<SimpleMotorFeedforward> m_setFeedforward;
