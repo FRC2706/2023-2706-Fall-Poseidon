@@ -11,13 +11,13 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 import frc.lib.lib2706.UpdateSimpleFeedforward;
 import frc.lib.lib3512.config.SwerveModuleConstants;
-import frc.lib.lib3512.math.OnboardModuleState;
 import frc.lib.lib3512.util.CANCoderUtil;
 import frc.lib.lib3512.util.CANSparkMaxUtil;
 import frc.lib.lib3512.util.CANCoderUtil.CCUsage;
@@ -36,6 +36,7 @@ public class SwerveModule {
   private DoublePublisher angleError;
   private DoublePublisher desiredSpeedEntry;
   private DoublePublisher desiredAngleEntry;
+  private DoubleEntry entryAngleOffset;
 
   public int moduleNumber;
   private Rotation2d lastAngle;
@@ -93,6 +94,7 @@ public class SwerveModule {
     currentAngleEntry = swerveModuleTable.getDoubleTopic("Current angle (deg)").publish(PubSubOption.periodic(0.02));
     speedError = swerveModuleTable.getDoubleTopic("Speed error (mps)").publish(PubSubOption.periodic(0.02));
     angleError = swerveModuleTable.getDoubleTopic("Angle error (deg)").publish(PubSubOption.periodic(0.02));
+    entryAngleOffset = swerveModuleTable.getDoubleTopic("Angle Offset").getEntry(moduleNumber);
 
     burnFlash();
   }
@@ -102,7 +104,7 @@ public class SwerveModule {
     // REV and CTRE are not
 
 
-    desiredState = OnboardModuleState.optimize(desiredState, getState().angle);
+    desiredState = SwerveModuleState.optimize(desiredState, getState().angle);
     desiredState.speedMetersPerSecond *= desiredState.angle.minus(getAngle()).getCos();
 
 
@@ -242,6 +244,7 @@ public class SwerveModule {
 
     currentSpeedEntry.accept(driveEncoder.getVelocity());
     currentAngleEntry.accept(getAngle().getRadians());
+    angleOffset = new Rotation2d(entryAngleOffset.get());
     updateFeedforward.checkForUpdates();
   }
 }

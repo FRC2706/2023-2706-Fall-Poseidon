@@ -117,6 +117,8 @@ public final class Config {
   public static final int INTAKE1_PNEUMATIC_FORWARD_CHANNEL = 4;
   public static final int INTAKE1_PNEUMATIC_REVERSE_CHANNEL = 6;
 
+  public static final Boolean swerveTuning = true;
+
   public static final class Swerve {
     public static final double stickDeadband = 0.1;
 
