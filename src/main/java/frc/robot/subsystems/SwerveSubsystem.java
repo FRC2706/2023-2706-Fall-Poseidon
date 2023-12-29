@@ -3,22 +3,25 @@ package frc.robot.subsystems;
 import java.util.Optional;
 
 import com.ctre.phoenix.sensors.PigeonIMU;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.PIDConstants;
+import com.pathplanner.lib.util.ReplanningConfig;
 
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
-import edu.wpi.first.networktables.PubSubOptions;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -40,8 +43,16 @@ public class SwerveSubsystem extends SubsystemBase {
   private DoublePublisher pubCurrentPositionY = swerveTable.getDoubleTopic("Current positionY (m) ").publish(PubSubOption.periodic(0.02));
   private DoubleArrayPublisher pubCurrentPose = swerveTable.getDoubleArrayTopic("Pose ").publish(PubSubOption.periodic(0.02));
 
-  // private DoubleArrayPublisher moduleStatePublisher;
-  // private DoubleArrayPublisher moduleStatePublisher;
+  // ProfiledPIDControllers for the pid control
+  ProfiledPIDController pidControlX;
+  double currentX;
+  double desiredX;
+  ProfiledPIDController pidControlY;
+  double currentY;
+  double desiredY;
+  ProfiledPIDController pidControlRotation;
+  double currentRotation;
+  double desiredRotation;
 
   
   private Field2d field;
@@ -73,17 +84,42 @@ public class SwerveSubsystem extends SubsystemBase {
 
     swerveOdometry = new SwerveDriveOdometry(Config.Swerve.swerveKinematics, getYaw(), getPositions(), new Pose2d() );
 
+    AutoBuilder.configureHolonomic(
+        this::getPose, // Robot pose supplier
+        this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
+        this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+        this::driveRobotRelative, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+        new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
+            new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+            new PIDConstants(5.0, 0.0, 0.0), // Rotation PID constants
+            4.5, // Max module speed, in m/s
+            0.4, // Drive base radius in meters. Distance from robot center to furthest module.
+            new ReplanningConfig() // Default path replanning config. See the API for the options here
+        ),
+        this // Reference to this subsystem to set requirements
+    );
+
     field = new Field2d();
     SmartDashboard.putData("Field", field);
+
+    pidControlX = new ProfiledPIDController(1, 0.0, 0.2,
+            new TrapezoidProfile.Constraints(1,1));
+    pidControlY = new ProfiledPIDController(1, 0.0, 0.2,
+            new TrapezoidProfile.Constraints(1, 1));
+    pidControlRotation = new ProfiledPIDController(4.0, 0, 0.4,
+            new TrapezoidProfile.Constraints(4 * Math.PI, 8 * Math.PI));
   }
 
   public void drive(
       ChassisSpeeds speeds, boolean fieldRelative, boolean isOpenLoop) {
     SwerveModuleState[] swerveModuleStates =
     Config.Swerve.swerveKinematics.toSwerveModuleStates(
-            fieldRelative ? 
-                ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getYaw()) :
-                speeds);
+      ChassisSpeeds.discretize(
+        fieldRelative ? 
+            ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getYaw()) :
+            speeds, 0.02
+      )
+    );
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Config.Swerve.maxSpeed);
 
     for (SwerveModule mod : mSwerveMods) {
@@ -147,6 +183,37 @@ public class SwerveSubsystem extends SubsystemBase {
     );
   }
 
+  // Swerve actual driving methods
+  public void resetDriveToPose() {
+    // reset current positions
+    pidControlX.reset(getPose().getX());
+    pidControlY.reset(getPose().getY());
+    pidControlRotation.reset(getPose().getRotation().getRadians());
+  }
+
+  public void driveToPose(Pose2d pose) {
+    //update the currentX and currentY
+    
+    currentX = getPose().getX();
+    currentY = getPose().getY();
+    currentRotation = getPose().getRotation().getRadians();
+
+    desiredX = pose.getX();
+    desiredY = pose.getY();
+    desiredRotation = pose.getRotation().getRadians();
+
+    double x = pidControlX.calculate(currentX, desiredX);
+    double y = pidControlY.calculate(currentY, desiredY);
+    double rot = pidControlRotation.calculate(currentRotation, desiredRotation);
+
+    drive(new ChassisSpeeds(x, y, rot), true, false);
+  }
+
+  public boolean isAtPose(double tol,double angleTol) {
+    return Math.abs(currentX - desiredX) < tol && Math.abs(currentY - desiredY) < tol
+            && Math.abs(currentRotation - desiredRotation) < angleTol;
+  }
+
   /**
    * Get a pose at the given timestamp. 
    * Returns an empty Optional if the buffer is empty or doesn't go back far enough.
@@ -179,4 +246,16 @@ public class SwerveSubsystem extends SubsystemBase {
 
 
   }
+  
+  public void driveRobotRelative(ChassisSpeeds robotRelativeSpeeds) {
+    ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, 0.02);
+
+    SwerveModuleState[] targetStates = Config.Swerve.swerveKinematics.toSwerveModuleStates(targetSpeeds);
+    setModuleStates(targetStates);
+  }
+
+  public ChassisSpeeds getRobotRelativeSpeeds() {
+    return Config.Swerve.swerveKinematics.toChassisSpeeds(getStates());
+  }
+
 }
