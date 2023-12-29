@@ -26,7 +26,7 @@ import frc.robot.Config;
 import frc.robot.Robot;
 
 /**
- * A SwerveModule class to represent a 2 CANSParkmax and 1 CANCoder swerve module.
+ * A SwerveModule class to represent a 2 CANSparkmax and 1 CANCoder swerve module.
  */
 public class SwerveModule {
 
@@ -59,7 +59,8 @@ public class SwerveModule {
   /**
    * Create a SwerveModule object
    * 
-   * @param moduleConstants The module constants for this module
+   * @param moduleNumber The number to identify this module in an array.
+   * @param moduleConstants The module constants for this module, as a {@link SwerveModuleConstants}
    * @param ModuleName The name of this module
    */
   public SwerveModule(int moduleNumber, SwerveModuleConstants moduleConstants, String ModuleName) {
@@ -108,8 +109,8 @@ public class SwerveModule {
   /**
    * Set the desired state of the module.
    * 
-   * @param desiredState
-   * @param isOpenLoop
+   * @param desiredState The {@link SwerveModuleState} to try to achieve.
+   * @param isOpenLoop True for open loop velocity control, false for closed loop.
    */
   public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop) {
     // Custom optimize command, since default WPILib optimize assumes continuous controller which
@@ -148,7 +149,7 @@ public class SwerveModule {
   }
 
   /**
-   * Configure the settings on the CANSParkMax angle motor
+   * Configure the settings on the CANSparkMax angle motor
    */
   private void configAngleMotor() {
     angleMotor.restoreFactoryDefaults();
@@ -189,7 +190,7 @@ public class SwerveModule {
   /**
    * Set the speed of the drive motor
    * 
-   * @param desiredState The SwerveModuleState containing the desired speed
+   * @param desiredState The {@link SwerveModuleState} containing the desired speed
    * @param isOpenLoop Whether to do open loop or closed loop velocity control
    */
   private void setSpeed(SwerveModuleState desiredState, boolean isOpenLoop) {
@@ -208,7 +209,7 @@ public class SwerveModule {
   /**
    * Set the angle of the steer motor
    * 
-   * @param desiredState The SwerveModuleState containing the desired angle
+   * @param desiredState The {@link SwerveModuleState} containing the desired angle
    */
   private void setAngle(SwerveModuleState desiredState) {
     // Prevent rotating module if speed is less then 1%. Prevents jittering.
@@ -224,7 +225,7 @@ public class SwerveModule {
   /**
    * Get the angle of the module from the integrated NEO encoder
    * 
-   * @return Rotation2d of the angle of the module
+   * @return {@link Rotation2d} of the angle of the module
    */
   private Rotation2d getAngle() {
     return new Rotation2d(integratedAngleEncoder.getPosition());
@@ -233,7 +234,7 @@ public class SwerveModule {
   /**
    * Get the angle of the module from the CANCoder.
    * 
-   * @return Rotation2d of the angle of the module
+   * @return {@link Rotation2d} of the angle of the module
    */
   public Rotation2d getCanCoder() {
     return Rotation2d.fromDegrees(angleEncoder.getAbsolutePosition());

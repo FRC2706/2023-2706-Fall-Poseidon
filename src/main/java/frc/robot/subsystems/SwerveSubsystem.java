@@ -37,6 +37,10 @@ public class SwerveSubsystem extends SubsystemBase {
   
   private Field2d field;
 
+  /**
+   * Create a SwerveSubsystem. 
+   * This should be private and only called by the getInstance method.
+   */
   public SwerveSubsystem() {
     gyro = new PigeonIMU(Config.Swerve.pigeonID);
     gyro.configFactoryDefault();
@@ -58,6 +62,17 @@ public class SwerveSubsystem extends SubsystemBase {
     SmartDashboard.putData("Field", field);
   }
 
+  /**
+   * Drive the swerve chassis by the given X speed, Y speed and angular speed given.
+   * Can drive relative to the field or relative to the robot.
+   * 
+   * Speeds are in meters per second (m/s).
+   * Angular speed is in radians per second (rad/s).
+   * 
+   * @param speeds The speeds to drive at, as a {@link ChassisSpeeds} object.
+   * @param fieldRelative True for field relative, false for robot relative.
+   * @param isOpenLoop True for open loop velocity control, false for closed loop velocity control.
+   */
   public void drive(
       Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
     SwerveModuleState[] swerveModuleStates =
@@ -73,7 +88,14 @@ public class SwerveSubsystem extends SubsystemBase {
     }
   }
 
-  /* Used by SwerveControllerCommand in Auto */
+  /**
+   * Set the states of each module individually.
+   * Used by PathPlanner to control the swerve chassis.
+   * 
+   * The size of the array given must match the number of modules.
+   * 
+   * @param desiredStates An array of {@link SwerveModuleState}.
+   */
   public void setModuleStates(SwerveModuleState[] desiredStates) {
     SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Config.Swerve.maxSpeed);
 
@@ -82,14 +104,30 @@ public class SwerveSubsystem extends SubsystemBase {
     }
   }
 
+  /**
+   * Get the pose of the robot using odometry.
+   * 
+   * @return A {@link Pose2d} of where the robot is on the field.
+   */
   public Pose2d getPose() {
     return swerveOdometry.getPoseMeters();
   }
 
+  /**
+   * Reset odometry to the given pose.
+   * 
+   * @param pose The {@link Pose2d} to reset odometry to.
+   */
   public void resetOdometry(Pose2d pose) {
     swerveOdometry.resetPosition(getYaw(), getPositions(), pose);
   }
 
+  /**
+   * Get the {@link SwerveModuleState}s of all modules.
+   * Contains the velocity and angle of each module.
+   * 
+   * @return An array of {@link SwerveModuleState} objects.
+   */
   public SwerveModuleState[] getStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
     for (SwerveModule mod : mSwerveMods) {
@@ -98,6 +136,12 @@ public class SwerveSubsystem extends SubsystemBase {
     return states;
   }
 
+  /**
+   * Get the {@link SwerveModulePosition}s of all modules.
+   * Contains the position and angle of each module.
+   * 
+   * @return An array of {@link SwerveModulePosition} objects.
+   */
   public SwerveModulePosition[] getPositions() {
     SwerveModulePosition[] positions = new SwerveModulePosition[4];
     for (SwerveModule mod : mSwerveMods) {
