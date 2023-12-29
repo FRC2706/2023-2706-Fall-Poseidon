@@ -5,11 +5,11 @@
 package frc.robot.commands;
 
 //imports
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.photonSubsystem;
 
 //class
-public class PhotonWaitForData extends CommandBase {
+public class PhotonWaitForData extends Command {
 
   int id = -1;
   public PhotonWaitForData(int desiredId) {
