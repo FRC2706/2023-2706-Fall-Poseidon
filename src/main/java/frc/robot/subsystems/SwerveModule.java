@@ -139,7 +139,6 @@ public class SwerveModule {
     angleController.setFF(Config.Swerve.angleKFF);
     angleMotor.enableVoltageCompensation(Config.Swerve.voltageComp);
     resetToAbsolute();
-    angleMotor.burnFlash();
   }
 
   private void configDriveMotor() {
@@ -155,14 +154,13 @@ public class SwerveModule {
     driveController.setD(Config.Swerve.angleKD);
     driveController.setFF(Config.Swerve.angleKFF);
     driveMotor.enableVoltageCompensation(Config.Swerve.voltageComp);
-    driveMotor.burnFlash();
     driveEncoder.setPosition(0.0);
   }
 
   /**
    * Save the configurations from flash to EEPROM.
    */
-  public void burnFlash() {
+  private void burnFlash() {
     try {
       Thread.sleep(200);
     } 

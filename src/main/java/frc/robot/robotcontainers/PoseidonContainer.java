@@ -34,7 +34,7 @@ public class PoseidonContainer extends RobotContainer {
   private final int strafeAxis = XboxController.Axis.kLeftX.value;
   private final int rotationAxis = XboxController.Axis.kRightX.value;
 
-  private final SwerveSubsystem s_Swerve = new SwerveSubsystem();
+  private final SwerveSubsystem s_Swerve = SwerveSubsystem.getInstance();
 
   /* Create Subsystems in a specific order */
 

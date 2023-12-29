@@ -56,7 +56,7 @@ public class SwerveSubsystem extends SubsystemBase {
       return instance;
   }
 
-  public SwerveSubsystem() {
+  private SwerveSubsystem() {
     gyro = new PigeonIMU(Config.Swerve.pigeonID);
     gyro.configFactoryDefault();
     // zeroGyro();
