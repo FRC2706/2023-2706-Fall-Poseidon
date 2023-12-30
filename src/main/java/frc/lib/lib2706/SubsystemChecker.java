@@ -23,6 +23,7 @@ public class SubsystemChecker {
         PneumaticShooterSubsystem,
         IndexerSubsystem,
         ArmSubsystem,
+        ArmPneumaticsSubsystem,
         RelaySubsystem,
         VisionNTSubsystem,
         BlingSubsystem,
@@ -67,12 +68,21 @@ public class SubsystemChecker {
         SubsystemType.DiffTalonSubsystem,  // Chassis
     };
 
-    // RobotID: 4, 2022 Fall Half-scale swerve robot, unnamed
-    private static SubsystemType[] miniSwerveId4 = new SubsystemType[] {
-        SubsystemType.SwerveSubsystem, // Chassis
-        SubsystemType.RelaySubsystem,
-        SubsystemType.VisionNTSubsystem,
+    // RobotID: 4, Simulation
+    private static SubsystemType[] simulatedRobot4 = new SubsystemType[] {
+        SubsystemType.SwerveSubsystem,
+        SubsystemType.GripperSubsystem,
+        SubsystemType.ArmSubsystem,
+        SubsystemType.ArmPneumaticsSubsystem,
+        SubsystemType.SwerveSubsystem,
     };
+
+    // RobotID: 4, 2022 Fall Half-scale swerve robot, unnamed
+    // private static SubsystemType[] miniSwerveId4 = new SubsystemType[] {
+    //     SubsystemType.SwerveSubsystem, // Chassis
+    //     SubsystemType.RelaySubsystem,
+    //     SubsystemType.VisionNTSubsystem,
+    // };
 
     // RobotID: 5, 2022 Fall Half-scale Neo Differential drive robot, unnamed
     private static SubsystemType[] neoMiniRobotId5 = new SubsystemType[] {
@@ -84,7 +94,7 @@ public class SubsystemChecker {
     };
 
     // Use robotSpecific to know what robot is currently running the code
-    private static SubsystemType[] activeRobotAllowedTypes = Config.robotSpecific(compBotId0, clutchId1, beetleId2, mergonautId3, miniSwerveId4, neoMiniRobotId5, armBotId6);
+    private static SubsystemType[] activeRobotAllowedTypes = Config.robotSpecific(compBotId0, clutchId1, beetleId2, mergonautId3, simulatedRobot4, neoMiniRobotId5, armBotId6);
 
     /**
      * Check if the subsystem is allowed for the robot this is deployed onto

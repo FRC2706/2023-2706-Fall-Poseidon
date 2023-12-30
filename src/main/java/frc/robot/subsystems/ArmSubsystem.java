@@ -11,11 +11,13 @@ import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
+import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 import com.revrobotics.REVPhysicsSim;
 import com.revrobotics.SparkMaxAbsoluteEncoder;
 import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.math.MathSharedStore;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -30,6 +32,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.lib2706.ProfiledExternalPIDController;
 import frc.lib.lib2706.SubsystemChecker;
 import frc.lib.lib2706.SubsystemChecker.SubsystemType;
 import frc.lib.lib2706.UpdateSimpleFeedforward;
@@ -45,7 +48,11 @@ public class ArmSubsystem extends SubsystemBase {
   private final SparkMaxPIDController m_botSparkPid, m_topSparkPid;
   private final SparkMaxAbsoluteEncoder m_botEncoder, m_topEncoder;
   
-  private final ProfiledPIDController m_botPid, m_topPid;
+  private final ProfiledExternalPIDController m_botProfiledPid, m_topProfiledPid;
+
+  private final PIDController m_botSimPid, m_topSimPid;
+  private boolean m_runBotPidSim = false;
+  private boolean m_runTopPidSim = false;
 
   private final ArmDisplay m_armDisplay;
 
@@ -59,8 +66,8 @@ public class ArmSubsystem extends SubsystemBase {
   private double lastBotTime = MathSharedStore.getTimestamp();
   private double lastTopTime = MathSharedStore.getTimestamp();
 
-  private double prevBotVoltage = 0;
-  private double prevTopVoltage = 0;
+  private double botFFVoltage = 0;
+  private double topFFVoltage = 0;
 
   private DoublePublisher pubBotPos, pubBotVel, pubTopPos, pubTopVel;
   private DoublePublisher pubBotPosSet, pubTopPosSet;
@@ -157,16 +164,17 @@ public class ArmSubsystem extends SubsystemBase {
     /**
      * Setup ProfiledPidControllers
      */
-    m_botPid = new ProfiledPIDController(
-        ArmConfig.BOT_KP, ArmConfig.BOT_KI, ArmConfig.BOT_KD, 
+    m_botProfiledPid = new ProfiledExternalPIDController(
         new Constraints(ArmConfig.BOT_MAX_VEL, ArmConfig.BOT_MAX_ACCEL));
 
-    m_topPid = new ProfiledPIDController(
-        ArmConfig.TOP_KP, ArmConfig.TOP_KI, ArmConfig.TOP_KD, 
+    m_topProfiledPid = new ProfiledExternalPIDController(
         new Constraints(ArmConfig.TOP_MAX_VEL, ArmConfig.TOP_MAX_ACCEL));
 
-    m_botPid.setIZone(ArmConfig.BOT_IZONE);
-    m_topPid.setIZone(ArmConfig.TOP_IZONE);
+    m_botSimPid = new PIDController(ArmConfig.BOT_KP, ArmConfig.BOT_KI, ArmConfig.BOT_KD);
+    m_topSimPid = new PIDController(ArmConfig.TOP_KP, ArmConfig.TOP_KI, ArmConfig.TOP_KD);
+    
+    m_botSimPid.setIZone(ArmConfig.BOT_IZONE);
+    m_topSimPid.setIZone(ArmConfig.TOP_IZONE);
 
     /**
      * Setup networktables
@@ -258,26 +266,27 @@ public class ArmSubsystem extends SubsystemBase {
    * @param botVel Velocity in rad/s
    */
   public void setBotAngle(double botAngle, double botVel) {
-    double pidVal = m_botPid.calculate(
+    double pidSetpoint = m_botProfiledPid.calculatePIDSetpoint(
         getBotPosition(), 
         new TrapezoidProfile.State(
             botAngle, 
             botVel));
 
-    double acceleration = (m_botPid.getSetpoint().velocity - lastBotSpeed) / (MathSharedStore.getTimestamp() - lastBotTime);
+    double acceleration = (m_botProfiledPid.getSetpoint().velocity - lastBotSpeed) / (MathSharedStore.getTimestamp() - lastBotTime);
 
-    prevBotVoltage = pidVal
-        + m_botFF.calculate(m_botPid.getSetpoint().velocity, acceleration)
-        + calculateGravFFBot(false);
+    botFFVoltage = m_botFF.calculate(m_botProfiledPid.getSetpoint().velocity, acceleration) 
+          + calculateGravFFBot(false);
 
-    m_botSpark.setVoltage(prevBotVoltage);
+    m_botSparkPid.setReference(pidSetpoint, ControlType.kPosition, 0, botFFVoltage, ArbFFUnits.kVoltage);
 
-    lastBotSpeed = m_botPid.getSetpoint().velocity;
+    lastBotSpeed = m_botProfiledPid.getSetpoint().velocity;
     lastBotTime = MathSharedStore.getTimestamp();
 
-    pubBotPosProSet.accept(Math.toDegrees(m_botPid.getSetpoint().position));
-    pubBotVelProSet.accept(Math.toDegrees(m_botPid.getSetpoint().velocity));
+    pubBotPosProSet.accept(Math.toDegrees(pidSetpoint));
+    pubBotVelProSet.accept(Math.toDegrees(m_botProfiledPid.getSetpoint().velocity));
     pubBotAccelSet.accept(Math.toDegrees(acceleration));
+
+    m_runBotPidSim = true;
   }
 
   /**
@@ -287,32 +296,33 @@ public class ArmSubsystem extends SubsystemBase {
    * @param topVel Velocity in rad/s
    */
   public void setTopAngle(double topAngle, double topVel) {
-    double pidVal = m_topPid.calculate(
+    double pidSetpoint = m_topProfiledPid.calculatePIDSetpoint(
         getTopPosition(), 
         new TrapezoidProfile.State(
             topAngle, 
             topVel));
 
-    double acceleration = (m_topPid.getSetpoint().velocity - lastTopSpeed) / (MathSharedStore.getTimestamp() - lastTopTime);
+    double acceleration = (m_topProfiledPid.getSetpoint().velocity - lastTopSpeed) / (MathSharedStore.getTimestamp() - lastTopTime);
 
     // If deccelerating and velocity is high, allow more deccelerating.
-    if (acceleration * m_topPid.getSetpoint().velocity <= 0 && 
-        Math.abs(m_topPid.getSetpoint().velocity) > ArmConfig.BOT_MAX_VEL*0.5) {
+    if (acceleration * m_topProfiledPid.getSetpoint().velocity <= 0 && 
+        Math.abs(m_topProfiledPid.getSetpoint().velocity) > ArmConfig.BOT_MAX_VEL*0.5) {
       acceleration *= 1.5;
     }
 
-    prevTopVoltage = pidVal
-        + m_topFF.calculate(m_topPid.getSetpoint().velocity, acceleration)
-        + calculateGravFFTop(false); //, getBotPosition(), m_topPid.getSetpoint().position);
+    topFFVoltage = m_topFF.calculate(m_topProfiledPid.getSetpoint().velocity, acceleration)
+                + calculateGravFFTop(false);
 
-    m_topSpark.setVoltage(prevTopVoltage);
+    m_topSparkPid.setReference(pidSetpoint, ControlType.kPosition, 0, topFFVoltage, ArbFFUnits.kVoltage);
 
-    lastTopSpeed = m_topPid.getSetpoint().velocity;
+    lastTopSpeed = m_topProfiledPid.getSetpoint().velocity;
     lastTopTime = MathSharedStore.getTimestamp();
 
-    pubTopPosProSet.accept(Math.toDegrees(m_topPid.getSetpoint().position));
-    pubTopVelProSet.accept(Math.toDegrees(m_topPid.getSetpoint().velocity));
+    pubTopPosProSet.accept(Math.toDegrees(pidSetpoint));
+    pubTopVelProSet.accept(Math.toDegrees(m_topProfiledPid.getSetpoint().velocity));
     pubTopAccelSet.accept(Math.toDegrees(acceleration));
+
+    m_runTopPidSim = true;
   }
 
 
@@ -375,13 +385,23 @@ public class ArmSubsystem extends SubsystemBase {
    * (Aka call in initalize of commands)
    */
   public void resetProfiledPIDControllers() {
-    m_botPid.reset(getBotPosition(), getBotVel());
-    m_topPid.reset(getTopPosition(), getTopVel());
+    m_botProfiledPid.reset(getBotPosition(), getBotVel());
+    m_topProfiledPid.reset(getTopPosition(), getTopVel());
 
     lastBotSpeed = getBotVel();
-    lastBotTime = MathSharedStore.getTimestamp();
     lastTopSpeed = getTopVel();
+    lastBotTime = MathSharedStore.getTimestamp();
     lastTopTime = MathSharedStore.getTimestamp();
+  }
+
+  /**
+   * Check if the arm has reached the last given setpoint.
+   * 
+   * @return True if at setpoint, false for not yet there.
+   */
+  public boolean isAtSetpoint() {
+    return m_botProfiledPid.atGoal(ArmConfig.POSITION_TOLERANCE, ArmConfig.VELOCITY_TOLERANCE)
+        && m_topProfiledPid.atGoal(ArmConfig.POSITION_TOLERANCE, ArmConfig.VELOCITY_TOLERANCE);
   }
 
   private double calculateGravFFBot(boolean haveCone) {
@@ -419,8 +439,11 @@ public class ArmSubsystem extends SubsystemBase {
     m_botSpark.stopMotor();
     m_topSpark.stopMotor();
 
-    prevBotVoltage = 0;
-    prevTopVoltage = 0;
+    botFFVoltage = 0;
+    topFFVoltage = 0;
+
+    m_runBotPidSim = false;
+    m_runTopPidSim = false;
   }
 
   /**
@@ -443,28 +466,30 @@ public class ArmSubsystem extends SubsystemBase {
   public void simulationPeriodic() {
     REVPhysicsSim.getInstance().run();
 
-    // Get motor duty cycle set during normal operations
-    double botAppliedOutput = m_botSpark.getAppliedOutput();
-    double topAppliedOutput = m_topSpark.getAppliedOutput();
+    double botVoltageApplied = 0;
+    double topVoltageApplied = 0;
 
-    // Disable the simulation when the robot is disabled
-    if (DriverStation.isDisabled()) {
-        botAppliedOutput = 0;
-        topAppliedOutput = 0;
+    if (m_runBotPidSim && DriverStation.isEnabled()) {
+      // Use the simPid to simulate the CANSparkMax pid controller
+      botVoltageApplied = botFFVoltage + 
+            m_botSimPid.calculate(getBotPosition(), m_botProfiledPid.getSetpoint().position);
+    }
 
-      prevBotVoltage = 0;
-      prevTopVoltage = 0;
+    if (m_runTopPidSim && DriverStation.isEnabled()) {
+      // Use the simPid to simulate the CANSparkMax pid controller
+      topVoltageApplied = topFFVoltage + 
+            m_topSimPid.calculate(getTopPosition(), m_topProfiledPid.getSetpoint().position);
     }
 
     // Pass the simulation with the inputs as voltages
-    ArmSimulation.ARM_BOT_SIM.setInput(prevBotVoltage - calculateGravFFBot(false));
-    ArmSimulation.ARM_TOP_SIM.setInput(prevTopVoltage - calculateGravFFTop(false));
+    ArmSimulation.ARM_BOT_SIM.setInput(botVoltageApplied - calculateGravFFBot(false));
+    ArmSimulation.ARM_TOP_SIM.setInput(topVoltageApplied - calculateGravFFTop(false));
 
     // Update simulation
     ArmSimulation.ARM_BOT_SIM.update(0.020); // 20ms clock cycle
     ArmSimulation.ARM_TOP_SIM.update(0.020);
 
-    // Update encoder readings
+    // Update encoder readings (doesn't work for AbsoluteEncoder from CANSparkMax)
     // m_botEncoder.setPosition(ArmSimulation.ARM_BOT_SIM.getAngleRads());
     // m_topEncoder.setPosition(ArmSimulation.ARM_TOP_SIM.getAngleRads());
 
@@ -485,5 +510,4 @@ public class ArmSubsystem extends SubsystemBase {
     m_botSparkPid.setReference(voltage, ControlType.kVoltage);
     System.out.println("Voltage set: " + voltage);
   }
-
 }

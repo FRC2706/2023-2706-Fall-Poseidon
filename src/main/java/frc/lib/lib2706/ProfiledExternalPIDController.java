@@ -203,7 +203,7 @@ public class ProfiledExternalPIDController {
    * @param measurement The current measurement of the process variable.
    * @return A setpoint for a PID controller's next input.
    */
-  public double calculatePidSetpoint(double measurement) {
+  public double calculatePIDSetpoint(double measurement) {
     m_prevError = m_positionError;
     m_haveMeasurement = true;
 
@@ -240,9 +240,9 @@ public class ProfiledExternalPIDController {
    * @param goal The new goal of the controller.
    * @return A setpoint for a PID controller's next input.
    */
-  public double calculatePidSetpoint(double measurement, TrapezoidProfile.State goal) {
+  public double calculatePIDSetpoint(double measurement, TrapezoidProfile.State goal) {
     setGoal(goal);
-    return calculatePidSetpoint(measurement);
+    return calculatePIDSetpoint(measurement);
   }
 
   /**
@@ -252,9 +252,9 @@ public class ProfiledExternalPIDController {
    * @param goal The new goal of the controller.
    * @return A setpoint for a  PID controller's next input.
    */
-  public double calculatePidSetpoint(double measurement, double goal) {
+  public double calculatePIDSetpoint(double measurement, double goal) {
     setGoal(goal);
-    return calculatePidSetpoint(measurement);
+    return calculatePIDSetpoint(measurement);
   }
 
   /**
@@ -265,10 +265,10 @@ public class ProfiledExternalPIDController {
    * @param constraints Velocity and acceleration constraints for goal.
    * @return A setpoint for a PID controller's next input.
    */
-  public double calculatePidSetpoint(
+  public double calculatePIDSetpoint(
       double measurement, TrapezoidProfile.State goal, TrapezoidProfile.Constraints constraints) {
     setConstraints(constraints);
-    return calculatePidSetpoint(measurement, goal);
+    return calculatePIDSetpoint(measurement, goal);
   }
 
   /**

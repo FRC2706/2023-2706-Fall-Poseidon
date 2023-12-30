@@ -49,8 +49,8 @@ public final class Config {
    */
   public static class CANID {
     // Arm Subsystem
-    public static final int TOP_ARM_SPARK_CAN_ID = robotSpecific(5,0,0,0,0,18,18);
-    public static final int BOTTOM_ARM_SPARK_CAN_ID = robotSpecific(4,0,0,0,0,19,19);
+    public static final int TOP_ARM_SPARK_CAN_ID = robotSpecific(5,0,0,0,5,18,18);
+    public static final int BOTTOM_ARM_SPARK_CAN_ID = robotSpecific(4,0,0,4,0,19,19);
 
     //Arm Subsystem
     public static final int BOTTOM_CANCODER_CAN_ID = 2;
@@ -85,9 +85,9 @@ public final class Config {
     if (robotId < 0) {
       // Set to the ID of the 2023 Competition robot if the simulation is running
       if (RobotBase.isSimulation()) {
-        robotId = 0;
+        robotId = 4;
 
-        // Not simulation so read the file on the roborio for it's robot id.
+      // Not simulation so read the file on the roborio for it's robot id.
       } else {
         try (BufferedReader reader = Files.newBufferedReader(ROBOT_ID_LOC)) {
           robotId = Integer.parseInt(reader.readLine());
@@ -107,6 +107,7 @@ public final class Config {
    * ID 1: Clutch (Rapid React)
    * ID 2: Beetle (Small Talon tank drive)
    * ID 3: Cosmobot (Deep Space)
+   * ID 4: Simulation (to be moved to a different ID in 2024)
    * 
    * ...
    * 

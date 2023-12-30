@@ -15,6 +15,7 @@ import frc.robot.Robot;
 import frc.robot.commands.ArmTestLimits;
 import frc.robot.commands.ControlSingleArm;
 import frc.robot.commands.GrabGamePieceCommand;
+import frc.robot.commands.MoveArm;
 import frc.robot.commands.SetBottomArm;
 import frc.robot.commands.SyncArmEncoders;
 import frc.robot.commands.TeleopSwerve;
@@ -134,11 +135,17 @@ public class PoseidonContainer extends RobotContainer {
 
     operator.start().onTrue(GripperSubsystem.getInstance().highPressureCommand());
 
-    operator.a().whileTrue(new ControlSingleArm(false, Math.toRadians(10)));
-    operator.b().whileTrue(new ControlSingleArm(false, Math.toRadians(30)));
-    operator.y().whileTrue(new ControlSingleArm(false, Math.toRadians(45)));
+    // operator.a().whileTrue(new ControlSingleArm(false, Math.toRadians(10)));
+    // operator.b().whileTrue(new ControlSingleArm(false, Math.toRadians(30)));
+    // operator.y().whileTrue(new ControlSingleArm(false, Math.toRadians(45)));
 
-    operator.x().whileTrue(new ArmTestLimits(operator));
+    // operator.x().whileTrue(new ArmTestLimits(operator));
+
+    operator.a().whileTrue(new MoveArm(0, 0));
+    operator.b().whileTrue(new MoveArm(0, 0));
+    operator.y().whileTrue(new MoveArm(0, 0));
+    
+
   }
 
   private void configureAutomationCommands() {

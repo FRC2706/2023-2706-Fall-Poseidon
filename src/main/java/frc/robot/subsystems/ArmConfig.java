@@ -68,6 +68,9 @@ public class ArmConfig {
     public static final double TOP_KD = 0;
     public static final double TOP_IZONE = Math.toRadians(6);
 
+    public static final double POSITION_TOLERANCE = Math.toRadians(1);
+    public static final double VELOCITY_TOLERANCE = Math.toRadians(0.5);
+
     /**
      * Angular velocity feedforward
      */
