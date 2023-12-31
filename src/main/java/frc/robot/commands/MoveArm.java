@@ -18,9 +18,9 @@ public class MoveArm extends Command {
   private boolean m_timerStarted = false;
 
   /** Creates a new MoveArm. */
-  public MoveArm(double botPos, double topPos) {
-    m_botPos = botPos;
-    m_topPos = topPos;
+  public MoveArm(double botPosDeg, double topPosDeg) {
+    m_botPos = Math.toRadians(botPosDeg);
+    m_topPos = Math.toRadians(topPosDeg);
 
     addRequirements(ArmSubsystem.getInstance(), ArmPneumaticsSubsystem.getInstance());
   }
@@ -30,9 +30,10 @@ public class MoveArm extends Command {
   public void initialize() {
     ArmSubsystem.getInstance().resetProfiledPIDControllers();
 
-    ArmPneumaticsSubsystem.getInstance().controlBottomBrake(true, true);
-    ArmPneumaticsSubsystem.getInstance().controlTopBrake(true, true);
+    ArmPneumaticsSubsystem.getInstance().controlBottomBrake(false, true);
+    ArmPneumaticsSubsystem.getInstance().controlTopBrake(false, true);
 
+    m_timer.stop();
     m_timer.reset();
   }
 
@@ -46,8 +47,8 @@ public class MoveArm extends Command {
 
       m_timer.restart();
      
-      ArmPneumaticsSubsystem.getInstance().controlBottomBrake(false, true);
-      ArmPneumaticsSubsystem.getInstance().controlTopBrake(false, true);
+      ArmPneumaticsSubsystem.getInstance().controlBottomBrake(true, true);
+      ArmPneumaticsSubsystem.getInstance().controlTopBrake(true, true);
     }
   }
 

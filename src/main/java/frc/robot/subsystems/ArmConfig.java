@@ -6,6 +6,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import frc.robot.Config;
 
 public class ArmConfig {
     /*
@@ -52,31 +53,37 @@ public class ArmConfig {
     /**
      * ProfiledPidController settings
      */
-    public static final double BOT_MAX_VEL = Math.toRadians(90); 
-    public static final double BOT_MAX_ACCEL = Math.toRadians(50);
+    public static final double BOT_MAX_VEL = Math.toRadians(armSpecific(90, 300)); 
+    public static final double BOT_MAX_ACCEL = Math.toRadians(armSpecific(50, 500));
 
-    public static final double TOP_MAX_VEL = Math.toRadians(400);
-    public static final double TOP_MAX_ACCEL = Math.toRadians(700);
+    public static final double TOP_MAX_VEL = Math.toRadians(armSpecific(400, 400));
+    public static final double TOP_MAX_ACCEL = Math.toRadians(armSpecific(700, 700));
 
-    public static final double BOT_KP = 1.4;
-    public static final double BOT_KI = 1.4;
+    public static final double BOT_KP = armSpecific(1.4, 2.0);
+    public static final double BOT_KI = armSpecific(0.0001, 1.0);
     public static final double BOT_KD = 0;
-    public static final double BOT_IZONE = Math.toRadians(6);
+    public static final double BOT_IZONE = Math.toRadians(armSpecific(6, 6));
 
-    public static final double TOP_KP = 2.4;
-    public static final double TOP_KI = 2.6;
+    public static final double TOP_KP = armSpecific(2.4, 2.0);
+    public static final double TOP_KI = armSpecific(0.0001, 1.0);
     public static final double TOP_KD = 0;
-    public static final double TOP_IZONE = Math.toRadians(6);
+    public static final double TOP_IZONE = Math.toRadians(armSpecific(6, 6));
 
     public static final double POSITION_TOLERANCE = Math.toRadians(1);
-    public static final double VELOCITY_TOLERANCE = Math.toRadians(0.5);
+    public static final double VELOCITY_TOLERANCE = Math.toRadians(1);
 
     /**
      * Angular velocity feedforward
      */
     // Real Robot values:
-    public static final SimpleMotorFeedforward BOT_SIMPLE_FF = new SimpleMotorFeedforward(0.001, 0, 0);
-    public static final SimpleMotorFeedforward TOP_SIMPLE_FF = new SimpleMotorFeedforward(0.001, 1.05, 0.15) ;
+    public static final SimpleMotorFeedforward BOT_SIMPLE_FF = armSpecific(
+        new SimpleMotorFeedforward(0.001, 0, 0), 
+        new SimpleMotorFeedforward(0, 1.25, 0.06));
+    
+    public static final SimpleMotorFeedforward TOP_SIMPLE_FF = armSpecific(
+        new SimpleMotorFeedforward(0.001, 1.05, 0.15), 
+        new SimpleMotorFeedforward(0, 1.23, 0.02));
+
 
     // Simulation FF values:
 //     public static final SimpleMotorFeedforward BOT_SIMPLE_FF = new SimpleMotorFeedforward(0, 1.25, 0.06);
@@ -126,8 +133,8 @@ public class ArmConfig {
         public static final double TOP_MASS_KG = Units
                 .lbsToKilograms(ArmFeedforward.TOP_FORCE / ArmFeedforward.GRAVITATIONAL_CONSTANT);
 
-        public static final double BOT_NOISE = 2.0 * Math.PI / 4096;
-        public static final double TOP_NOISE = 2.0 * Math.PI / 4096;
+        public static final double BOT_NOISE = Math.PI / 4096;
+        public static final double TOP_NOISE = Math.PI / 4096;
 
         public static final SingleJointedArmSim ARM_BOT_SIM = new SingleJointedArmSim(
                 DCMotor.getNEO(1),
@@ -154,5 +161,13 @@ public class ArmConfig {
                 Math.toRadians(30), // Starting angle
                 VecBuilder.fill(TOP_NOISE) // Add noise with a small std-dev
         );
+    }
+
+    public static <T> T armSpecific(T realRobot, T simRobot) {
+        if (Config.getRobotId() == 4) {
+            return simRobot;
+        } else {
+            return realRobot;
+        }
     }
 }

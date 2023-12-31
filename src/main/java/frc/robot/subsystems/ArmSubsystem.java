@@ -63,8 +63,6 @@ public class ArmSubsystem extends SubsystemBase {
 
   private double lastBotSpeed = 0;
   private double lastTopSpeed = 0;
-  private double lastBotTime = MathSharedStore.getTimestamp();
-  private double lastTopTime = MathSharedStore.getTimestamp();
 
   private double botFFVoltage = 0;
   private double topFFVoltage = 0;
@@ -73,8 +71,6 @@ public class ArmSubsystem extends SubsystemBase {
   private DoublePublisher pubBotPosSet, pubTopPosSet;
   private DoublePublisher pubBotPosProSet, pubBotVelProSet, pubTopPosProSet, pubTopVelProSet;
   private DoublePublisher pubBotAccelSet, pubTopAccelSet;
-
-
   
   public static ArmSubsystem getInstance() {
     if (instance == null) {
@@ -114,6 +110,16 @@ public class ArmSubsystem extends SubsystemBase {
      */
     m_botSparkPid = m_botSpark.getPIDController();
     m_topSparkPid = m_topSpark.getPIDController();
+
+    errSpark(() -> m_botSparkPid.setP(ArmConfig.BOT_KP));
+    errSpark(() -> m_botSparkPid.setI(ArmConfig.BOT_KI));
+    errSpark(() -> m_botSparkPid.setD(ArmConfig.BOT_KD));
+    errSpark(() -> m_botSparkPid.setIZone(ArmConfig.BOT_IZONE));
+
+    errSpark(() -> m_topSparkPid.setP(ArmConfig.BOT_KP));
+    errSpark(() -> m_topSparkPid.setI(ArmConfig.BOT_KI));
+    errSpark(() -> m_topSparkPid.setD(ArmConfig.BOT_KD));
+    errSpark(() -> m_topSparkPid.setIZone(ArmConfig.BOT_IZONE));
 
     /**
      * Setup Absolute Encoders
@@ -162,7 +168,7 @@ public class ArmSubsystem extends SubsystemBase {
         Units.metersToInches(ArmConfig.TOP_LENGTH));
 
     /**
-     * Setup ProfiledPidControllers
+     * Setup ProfiledPidControllers and Simulation PIDControllers
      */
     m_botProfiledPid = new ProfiledExternalPIDController(
         new Constraints(ArmConfig.BOT_MAX_VEL, ArmConfig.BOT_MAX_ACCEL));
@@ -272,7 +278,7 @@ public class ArmSubsystem extends SubsystemBase {
             botAngle, 
             botVel));
 
-    double acceleration = (m_botProfiledPid.getSetpoint().velocity - lastBotSpeed) / (MathSharedStore.getTimestamp() - lastBotTime);
+    double acceleration = (m_botProfiledPid.getSetpoint().velocity - lastBotSpeed) / 0.02;
 
     botFFVoltage = m_botFF.calculate(m_botProfiledPid.getSetpoint().velocity, acceleration) 
           + calculateGravFFBot(false);
@@ -280,7 +286,6 @@ public class ArmSubsystem extends SubsystemBase {
     m_botSparkPid.setReference(pidSetpoint, ControlType.kPosition, 0, botFFVoltage, ArbFFUnits.kVoltage);
 
     lastBotSpeed = m_botProfiledPid.getSetpoint().velocity;
-    lastBotTime = MathSharedStore.getTimestamp();
 
     pubBotPosProSet.accept(Math.toDegrees(pidSetpoint));
     pubBotVelProSet.accept(Math.toDegrees(m_botProfiledPid.getSetpoint().velocity));
@@ -301,14 +306,15 @@ public class ArmSubsystem extends SubsystemBase {
         new TrapezoidProfile.State(
             topAngle, 
             topVel));
+    
+    double acceleration = (m_topProfiledPid.getSetpoint().velocity - lastTopSpeed) / 0.02;
 
-    double acceleration = (m_topProfiledPid.getSetpoint().velocity - lastTopSpeed) / (MathSharedStore.getTimestamp() - lastTopTime);
 
     // If deccelerating and velocity is high, allow more deccelerating.
-    if (acceleration * m_topProfiledPid.getSetpoint().velocity <= 0 && 
-        Math.abs(m_topProfiledPid.getSetpoint().velocity) > ArmConfig.BOT_MAX_VEL*0.5) {
-      acceleration *= 1.5;
-    }
+    // if (acceleration * m_topProfiledPid.getSetpoint().velocity <= 0 && 
+    //     Math.abs(m_topProfiledPid.getSetpoint().velocity) > ArmConfig.BOT_MAX_VEL*0.5) {
+    //   acceleration *= 1.5;
+    // }
 
     topFFVoltage = m_topFF.calculate(m_topProfiledPid.getSetpoint().velocity, acceleration)
                 + calculateGravFFTop(false);
@@ -316,7 +322,6 @@ public class ArmSubsystem extends SubsystemBase {
     m_topSparkPid.setReference(pidSetpoint, ControlType.kPosition, 0, topFFVoltage, ArbFFUnits.kVoltage);
 
     lastTopSpeed = m_topProfiledPid.getSetpoint().velocity;
-    lastTopTime = MathSharedStore.getTimestamp();
 
     pubTopPosProSet.accept(Math.toDegrees(pidSetpoint));
     pubTopVelProSet.accept(Math.toDegrees(m_topProfiledPid.getSetpoint().velocity));
@@ -388,10 +393,16 @@ public class ArmSubsystem extends SubsystemBase {
     m_botProfiledPid.reset(getBotPosition(), getBotVel());
     m_topProfiledPid.reset(getTopPosition(), getTopVel());
 
+    botFFVoltage = 0;
+    topFFVoltage = 0;
+
+    if (RobotBase.isSimulation()) {
+      m_botSimPid.reset();
+      m_topSimPid.reset();
+    }
+
     lastBotSpeed = getBotVel();
     lastTopSpeed = getTopVel();
-    lastBotTime = MathSharedStore.getTimestamp();
-    lastTopTime = MathSharedStore.getTimestamp();
   }
 
   /**

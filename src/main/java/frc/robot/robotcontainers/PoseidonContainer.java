@@ -141,9 +141,9 @@ public class PoseidonContainer extends RobotContainer {
 
     // operator.x().whileTrue(new ArmTestLimits(operator));
 
-    operator.a().whileTrue(new MoveArm(0, 0));
-    operator.b().whileTrue(new MoveArm(0, 0));
-    operator.y().whileTrue(new MoveArm(0, 0));
+    operator.a().whileTrue(new MoveArm(90, 20));
+    operator.b().whileTrue(new MoveArm(70, 110));
+    operator.y().whileTrue(new MoveArm(45, 180));
     
 
   }
