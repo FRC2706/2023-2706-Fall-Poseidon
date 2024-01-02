@@ -7,7 +7,7 @@ import frc.robot.subsystems.ArmSubsystem;
 
 public class SetTopArm extends CommandBase{
     double topArmAngleRadians;
-    final double TIMEOUT_S=2;
+    final double TIMEOUT_S= 1.5;
 
     Timer m_timer = new Timer();
     /*Creates a new SetTopArm */

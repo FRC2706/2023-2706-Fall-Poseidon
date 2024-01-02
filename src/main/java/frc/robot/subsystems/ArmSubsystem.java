@@ -17,10 +17,12 @@ import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import frc.robot.Config;
 import frc.robot.ErrorCheck;
+import frc.robot.ProfiledPIDFFController;
 import frc.robot.SubsystemChecker;
 import frc.robot.SubsystemChecker.SubsystemType;
 import edu.wpi.first.networktables.DoubleEntry;
@@ -61,7 +63,7 @@ public class ArmSubsystem extends SubsystemBase {
   private DoubleEntry m_bottomArmMomentToVoltage;
   private DoublePublisher m_bottomArmFFTestingVolts;
   private DoubleEntry m_bottomArmOffset;
-  private DoublePublisher m_bottomAbsoluteEncoder;
+  private DoublePublisher m_bottomTargetAngle;
   private DoublePublisher m_bottomArmPosPub;
 
   //network tables entries for top arm 
@@ -75,7 +77,7 @@ public class ArmSubsystem extends SubsystemBase {
   private DoubleEntry m_topArmMomentToVoltage;
   private DoublePublisher m_topArmFFTestingVolts;
   private DoubleEntry m_topArmOffset;
-  private DoublePublisher m_topAbsoluteEncoder;
+  private DoublePublisher m_topTargetAngle;
   private DoublePublisher m_topArmPosPub;
 
   //for bottom arm ff
@@ -93,6 +95,8 @@ public class ArmSubsystem extends SubsystemBase {
   //private RelativeEncoder m_bottomEncoder;
   public SparkMaxPIDController m_pidControllerBottomArm;  
   public SparkMaxPIDController m_pidControllerTopArm;
+
+  ProfiledPIDFFController m_profiledFFController = new ProfiledPIDFFController();
 
 
   public static ArmSubsystem getInstance() { //gets arm subsystem object to control movement
@@ -127,6 +131,13 @@ public class ArmSubsystem extends SubsystemBase {
     ErrorCheck.errREV(m_topArm.setSoftLimit(SoftLimitDirection.kReverse, ArmConfig.top_arm_reverse_limit));
     ErrorCheck.errREV(m_topArm.enableSoftLimit(SoftLimitDirection.kForward, ArmConfig.TOP_SOFT_LIMIT_ENABLE));
     ErrorCheck.errREV(m_topArm.enableSoftLimit(SoftLimitDirection.kReverse, ArmConfig.TOP_SOFT_LIMIT_ENABLE));
+
+    m_topArm.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+    m_topArm.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 20);
+
+    m_bottomArm.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+    m_bottomArm.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 20);
+
 
     //unit: radius
     m_bottomAbsEncoder = m_bottomArm.getAbsoluteEncoder(Type.kDutyCycle);
@@ -186,11 +197,11 @@ public class ArmSubsystem extends SubsystemBase {
 
     
     m_bottomArmPosPub = bottomArmDataTable.getDoubleTopic("MeasuredAngle").publish(PubSubOption.periodic(0.02));
-    m_bottomAbsoluteEncoder = bottomArmDataTable.getDoubleTopic("Absolute Encoder").publish(PubSubOption.periodic(0.02));
+    m_bottomTargetAngle = bottomArmDataTable.getDoubleTopic("TargetAngle").publish(PubSubOption.periodic(0.02));
     m_bottomArmVelPub = bottomArmDataTable.getDoubleTopic("Vel").publish(PubSubOption.periodic(0.02));
 
     m_topArmPosPub = topArmDataTable.getDoubleTopic("MeasuredAngle").publish(PubSubOption.periodic(0.02));
-    m_topAbsoluteEncoder = topArmDataTable.getDoubleTopic("Absolute Encoder").publish(PubSubOption.periodic(0.02));
+    m_topTargetAngle = topArmDataTable.getDoubleTopic("TargetAngle").publish(PubSubOption.periodic(0.02));
     m_topArmVelPub = topArmDataTable.getDoubleTopic("Vel").publish(PubSubOption.periodic(0.02));
 
 
@@ -236,12 +247,10 @@ public class ArmSubsystem extends SubsystemBase {
   public void periodic() {
     m_bottomArmPosPub.accept(Math.toDegrees(m_bottomAbsEncoder.getPosition()));
     m_bottomArmVelPub.accept(m_bottomAbsEncoder.getVelocity());
-    m_bottomAbsoluteEncoder.accept(Math.toDegrees(getAbsoluteBottom()));
+    m_bottomTargetAngle.accept(Math.toDegrees(getAbsoluteBottom()));
 
     m_topArmPosPub.accept(Math.toDegrees(m_topAbsEncoder.getPosition()));
     m_topArmVelPub.accept(m_topAbsEncoder.getVelocity());
-    m_topAbsoluteEncoder.accept(Math.toDegrees(getAbsoluteTop()));
-
     // This method will be called once per scheduler run
   }
 
@@ -261,7 +270,10 @@ public class ArmSubsystem extends SubsystemBase {
     }
     //setReference angle is in radians)
     //todo: tune FF 
-    m_pidControllerTopArm.setReference((angle_top), ControlType.kPosition, 0,0.1);
+    double targetPos = m_profiledFFController.getNextProfiledPIDPos(getTopPosition(), angle_top);
+    m_pidControllerTopArm.setReference((targetPos), ControlType.kPosition, 0, calculateFFTop());
+    m_topTargetAngle.accept(Math.toDegrees(targetPos));
+
   }
 
   /*public void controlBottomArmBrake( boolean bBrakeOn) {
@@ -326,5 +338,15 @@ public class ArmSubsystem extends SubsystemBase {
   public void burnFlash() {
     ErrorCheck.errREV(m_bottomArm.burnFlash());
     ErrorCheck.errREV(m_topArm.burnFlash());
+  }
+  private double calculateFFTop() {
+    double enc2AtHorizontal = getTopPosition() - (Math.PI - getBottomPosition());
+    double voltsAtHorizontal;
+    voltsAtHorizontal = 2.0;
+    //System.out.println("top position " + getTopPosition());
+    //System.out.println("bottom position " + getBottomPosition());
+    //System.out.println("calculated position " + enc2AtHorizontal);
+    System.out.println("return voltage " + voltsAtHorizontal * Math.cos(enc2AtHorizontal));
+    return voltsAtHorizontal * Math.cos(enc2AtHorizontal);
   }
 }
