@@ -105,10 +105,14 @@ public class SwerveModule {
     // Custom optimize command, since default WPILib optimize assumes continuous controller which
     // REV and CTRE are not
 
-
     desiredState = SwerveModuleState.optimize(desiredState, getState().angle);
     desiredState.speedMetersPerSecond *= desiredState.angle.minus(getAngle()).getCos();
 
+    if (synchronizeEncoderQueued) {
+      synchronizeEncoderQueued = false;
+      resetToAbsolute();
+      desiredState = new SwerveModuleState(0, lastAngle);
+    }
 
     setAngle(desiredState);
     setSpeed(desiredState, isOpenLoop);
@@ -126,6 +130,7 @@ public class SwerveModule {
   private void resetToAbsolute() {
     double absolutePosition = getCanCoder().getRadians() - angleOffset.getRadians();
     integratedAngleEncoder.setPosition(absolutePosition);
+    lastAngle = getAngle();
   }
 
   private void configAngleEncoder() {
@@ -146,7 +151,7 @@ public class SwerveModule {
     configureSpark("Angle set D", () -> angleController.setD(Config.Swerve.angleKD));
     configureSpark("Angle set FF", () -> angleController.setFF(Config.Swerve.angleKFF));
     configureSpark("Angle set pid wrap min", () -> angleController.setPositionPIDWrappingMinInput(0));
-    configureSpark("Angle set pid wrap max", () -> angleController.setPositionPIDWrappingMaxInput(360));
+    configureSpark("Angle set pid wrap max", () -> angleController.setPositionPIDWrappingMaxInput(2 * Math.PI));
     configureSpark("Angle set pid wrap", () -> angleController.setPositionPIDWrappingEnabled(true));
     configureSpark("Angle enable Volatage Compensation", () -> angleMotor.enableVoltageCompensation(Config.Swerve.voltageComp));
     resetToAbsolute();
@@ -243,17 +248,17 @@ public class SwerveModule {
 
   public void periodic() {
     //update network tables
-
     currentSpeedEntry.accept(driveEncoder.getVelocity());
     currentAngleEntry.accept(getAngle().getRadians());
-    angleOffset = new Rotation2d(entryAngleOffset.get());
     updateFeedforward.checkForUpdates();
+
+    if (Config.swerveTuning) {  
+      angleOffset = new Rotation2d(entryAngleOffset.get());
+    }
   }
 
-    public void queueSynchronizeEncoders()
-  {
-    if (driveEncoder != null)
-    {
+  public void queueSynchronizeEncoders() {
+    if (driveEncoder != null) {
       synchronizeEncoderQueued = true;
     }
   }

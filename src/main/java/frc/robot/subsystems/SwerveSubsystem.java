@@ -132,11 +132,11 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   /* Used by SwerveControllerCommand in Auto */
-  public void setModuleStates(SwerveModuleState[] desiredStates) {
+  public void setModuleStates(SwerveModuleState[] desiredStates, boolean isOpenLoop) {
     SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Config.Swerve.maxSpeed);
 
     for (SwerveModule mod : mSwerveMods) {
-      mod.setDesiredState(desiredStates[mod.moduleNumber], false);
+      mod.setDesiredState(desiredStates[mod.moduleNumber], isOpenLoop);
     }
   }
 
@@ -164,7 +164,7 @@ public class SwerveSubsystem extends SubsystemBase {
     return positions;
   }
 
-  public Rotation2d getYaw() {
+  private Rotation2d getYaw() {
     return (Config.Swerve.invertGyro)
         ? Rotation2d.fromDegrees(360 - gyro.getYaw())
         : Rotation2d.fromDegrees(gyro.getYaw());
@@ -183,15 +183,15 @@ public class SwerveSubsystem extends SubsystemBase {
         new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
         new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
         new SwerveModuleState(0, Rotation2d.fromDegrees(45))
-      })
+      }, true)
     );
   }
 
   // Swerve actual driving methods
   public void resetDriveToPose() {
     // reset current positions
-    pidControlX.reset(getPose().getX());
-    pidControlY.reset(getPose().getY());
+    pidControlX.reset(getPose().getX(),getFieldRelativeSpeeds().vxMetersPerSecond);
+    pidControlY.reset(getPose().getY(),getFieldRelativeSpeeds().vyMetersPerSecond);
     pidControlRotation.reset(getPose().getRotation().getRadians());
   }
 
@@ -237,17 +237,11 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveOdometry.update(getYaw(), tempGetPositions);
     field.setRobotPose(getPose());
 
-    double sumVelocity = 0;
-    for (SwerveModule mod : mSwerveMods) {
-      mod.periodic();
-      
-      sumVelocity += Math.abs(mod.getState().speedMetersPerSecond);
-    }
-
+  
     // If the robot isn't moving synchronize the encoders every 100ms (Inspired by democrat's SDS
     // lib)
     // To ensure that everytime we initialize it works.
-    if (sumVelocity <= .01 && ++moduleSynchronizationCounter > 5) {
+    if (isChassisMoving()==true) {
       synchronizeModuleEncoders();
       moduleSynchronizationCounter = 0;
     }
@@ -266,7 +260,7 @@ public class SwerveSubsystem extends SubsystemBase {
     ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, 0.02);
 
     SwerveModuleState[] targetStates = Config.Swerve.swerveKinematics.toSwerveModuleStates(targetSpeeds);
-    setModuleStates(targetStates);
+    setModuleStates(targetStates, false);
   }
 
   public ChassisSpeeds getRobotRelativeSpeeds() {
@@ -281,4 +275,33 @@ public class SwerveSubsystem extends SubsystemBase {
     }
   }
 
+  public Rotation2d getHeading()
+  {
+    return getPose().getRotation();
+  }
+
+  public ChassisSpeeds getFieldRelativeSpeeds()
+  {
+    return ChassisSpeeds.fromRobotRelativeSpeeds(getRobotRelativeSpeeds(), getHeading());
+  }
+
+  public boolean isChassisMoving()
+  {
+    double sumVelocity = 0;
+    for (SwerveModule mod : mSwerveMods) {
+      mod.periodic();
+      
+      sumVelocity += Math.abs(mod.getState().speedMetersPerSecond);
+    }
+
+    if (sumVelocity <= .01 && ++moduleSynchronizationCounter > 5) {
+      return true;
+    }
+
+    else
+    {
+      return false;
+    }
+
+  }
 }
