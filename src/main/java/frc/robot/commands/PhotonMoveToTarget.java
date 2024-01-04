@@ -29,7 +29,7 @@ public class PhotonMoveToTarget extends Command {
     tolerance=_tolerance;
   }
 
-  
+  //if you want a direction at the stopping point
   public PhotonMoveToTarget(Translation2d _targetOffset, Rotation2d _desiredHeading, double _tolerance) {
     addRequirements(SwerveSubsystem.getInstance());
     addRequirements(PhotonSubsystem.getInstance());

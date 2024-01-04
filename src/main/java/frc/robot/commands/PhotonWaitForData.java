@@ -14,6 +14,7 @@ public class PhotonWaitForData extends Command {
   int id = -1;
   public PhotonWaitForData(int desiredId) {
     addRequirements(PhotonSubsystem.getInstance());
+    //get the id
     id = desiredId;
   }
   public PhotonWaitForData() {
@@ -23,6 +24,7 @@ public class PhotonWaitForData extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    //reset the subsystem with the new id
     PhotonSubsystem.getInstance().reset(id);
   }
 
@@ -39,6 +41,7 @@ public class PhotonWaitForData extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
+    //end when the subsystem has enough data
     return (PhotonSubsystem.getInstance().hasData());
   }
 }
