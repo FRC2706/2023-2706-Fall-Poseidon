@@ -103,6 +103,8 @@ public class SwerveSubsystem extends SubsystemBase {
         this // Reference to this subsystem to set requirements
     );
 
+    poseBuffer = new PoseBuffer();
+
     field = new Field2d();
     SmartDashboard.putData("Field", field);
 
