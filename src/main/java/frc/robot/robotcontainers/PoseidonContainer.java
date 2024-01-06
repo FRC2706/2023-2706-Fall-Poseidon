@@ -8,6 +8,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
+import frc.robot.commands.SetBottomArm;
+import frc.robot.commands.SetTopArm;
+import frc.robot.commands.SyncArmEncoders;
 import frc.robot.commands.ArmPneumaticsCommands.*;
 import frc.robot.subsystems.GripperSubsystem;
 
@@ -41,6 +44,8 @@ public class PoseidonContainer extends RobotContainer {
    * created via the {@link CommandXboxController} or other ways.
    */
   private void configureButtonBindings() {
+    CommandXboxController driver = new CommandXboxController(0);
+    CommandXboxController operator = new CommandXboxController (1);
     /* Driver Controls */
     
     //ArmPneumaticsSubsystem commands
@@ -63,7 +68,14 @@ public class PoseidonContainer extends RobotContainer {
     driver.a().onTrue(GripperSubsystem.getInstance().lowPressureCommand());
     // B - High Pressure
     driver.b().onTrue(GripperSubsystem.getInstance().highPressureCommand());
+
+
     /* Operator Controls */
+    operator.a().onTrue(new SetBottomArm(90));
+    operator.b().onTrue(new SetBottomArm(80));
+    operator.x().onTrue(new SetTopArm(10));
+    operator.y().onTrue(new SetTopArm(30));
+  
   }
 
   /**
@@ -75,3 +87,4 @@ public class PoseidonContainer extends RobotContainer {
     return new InstantCommand();
   }
 }
+
