@@ -159,7 +159,7 @@ public class ArmSubsystem extends SubsystemBase {
     m_pidControllerTopArm.setFeedbackDevice(m_topAbsEncoder);
 
     NetworkTable topArmTuningTable = NetworkTableInstance.getDefault().getTable(m_tuningTableTop);
-    m_topArmPSubs = topArmTuningTable.getDoubleTopic("P").getEntry(ArmConfig.top_arm_kP);
+    m_topArmPSubs = topArmTuningTable.getDoubleTopic("P").getEntry(ArmConfig.top_arm_kP, PubSubOption.periodic(0.02));
     m_topArmISubs = topArmTuningTable.getDoubleTopic("I").getEntry(ArmConfig.top_arm_kI);
     m_topArmDSubs = topArmTuningTable.getDoubleTopic("D").getEntry(ArmConfig.top_arm_kD);
     m_topArmIzSubs = topArmTuningTable.getDoubleTopic("IZone").getEntry(ArmConfig.top_arm_kIz);
@@ -265,14 +265,15 @@ public class ArmSubsystem extends SubsystemBase {
   }
 
   public void setTopJointAngle(double angle_top) {
-    if (angle_top<Math.toRadians(80) || angle_top>Math.toRadians(125)) {
-      angle_top = Math.toRadians(90);
+    if (angle_top<Math.toRadians(0) || angle_top>Math.toRadians(35)) {
+      angle_top = Math.toRadians(10);
     }
     //setReference angle is in radians)
     //todo: tune FF 
     double targetPos = m_profiledFFController.getNextProfiledPIDPos(getTopPosition(), angle_top);
     m_pidControllerTopArm.setReference((targetPos), ControlType.kPosition, 0, calculateFFTop());
     m_topTargetAngle.accept(Math.toDegrees(targetPos));
+    System.out.println(targetPos);
 
   }
 

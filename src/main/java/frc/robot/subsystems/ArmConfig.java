@@ -63,8 +63,8 @@ public class ArmConfig {
     public static final double BOTTOM_MAX_VEL = Math.PI * 3;
     public static final double BOTTOM_MAX_ACCEL = Math.PI *3;
     
-    public static final double TOP_MAX_VEL = Math.PI * 3;
-    public static final double TOP_MAX_ACCEL = Math.PI *3;
+    public static final double TOP_MAX_VEL = Math.PI * 0.5;
+    public static final double TOP_MAX_ACCEL = Math.PI *0.5;
 
 
 
