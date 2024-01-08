@@ -57,7 +57,7 @@ public class SwerveSubsystem extends SubsystemBase {
   
   private Field2d field;
 
-  private PoseBuffer poseBuffer;
+  private PoseBuffer poseBuffer = new PoseBuffer();
 
   private static SwerveSubsystem instance;
   public static SwerveSubsystem getInstance(){
