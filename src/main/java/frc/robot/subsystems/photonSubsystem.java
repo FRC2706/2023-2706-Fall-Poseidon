@@ -133,13 +133,13 @@ public class PhotonSubsystem extends SubsystemBase {
     return(EXAMPLE_SIZE_HEIGHT*EXAMPLE_DISTANCE/heightSize);
   }
 
-  private rotation2D yaw(double x) {
+  private Rotation2d yaw(double x) {
     x = (IMAGE_WIDTH/2-x)*CAMERA_FOV_YAW/IMAGE_WIDTH;
-    Rotation2d yaw = Rotation2d.fromDegrees(x); 
+    return (Rotation2d.fromDegrees(x)); 
   }
 
   private PhotonTrackedTarget biggestTarget(List<PhotonTrackedTarget> targets) {
-    PhotonTrackedTarget biggestTarget;
+    PhotonTrackedTarget biggestTarget= new PhotonTrackedTarget();
     double tallest = 0;
     for (PhotonTrackedTarget t:targets) {
       List<TargetCorner> corners = t.getDetectedCorners();
@@ -149,7 +149,7 @@ public class PhotonSubsystem extends SubsystemBase {
         biggestTarget = t;
       }
     }
-    return biggestTarget;
+    return (biggestTarget);
   }
 
   private Pose2d convertToField(double range, Rotation2d yaw, Pose2d odometryPose) {
@@ -209,7 +209,7 @@ public class PhotonSubsystem extends SubsystemBase {
       //publish to networktables
       pubSetPoint.accept(new double[]{targetPos.getX(),targetPos.getY(),targetRotation.getRadians()});
       pubRange.accept(range);
-      pubYaw.accept(yaw.getDegrees);
+      pubYaw.accept(yaw.getDegrees());
     }
   }
 }
