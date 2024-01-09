@@ -6,11 +6,16 @@
 package frc.robot.robotcontainers;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
+import frc.robot.commands.PhotonMoveToTarget;
+import frc.robot.commands.PhotonWaitForData;
 import frc.robot.commands.TeleopSwerve;
 import frc.robot.subsystems.SwerveModule;
 import frc.robot.subsystems.SwerveSubsystem;
@@ -80,7 +85,14 @@ public class PoseidonContainer extends RobotContainer {
     // Y - No Pressure
     driver.y().onTrue(GripperSubsystem.getInstance().noPressureCommand());
     // A - Low Pressure
-    driver.a().onTrue(GripperSubsystem.getInstance().lowPressureCommand());
+    //driver.a().onTrue(GripperSubsystem.getInstance().lowPressureCommand());
+    // A - Align to apriltag
+    driver.a().whileTrue(Commands.sequence(
+      new PhotonWaitForData(-1), new ScheduleCommand(Commands.sequence
+            (new PhotonMoveToTarget(new Translation2d(-1.5,-0.3), 0.2),
+            new PhotonMoveToTarget(new Translation2d(-1,0.05),Rotation2d.fromDegrees(0), 0.01)))))
+      .onFalse(new InstantCommand( () -> {},SwerveSubsystem.getInstance()));
+
     // B - High Pressure
     driver.b().onTrue(GripperSubsystem.getInstance().highPressureCommand());
     /* Operator Controls */
