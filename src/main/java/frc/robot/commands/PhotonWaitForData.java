@@ -19,6 +19,7 @@ public class PhotonWaitForData extends Command {
   }
   public PhotonWaitForData() {
     addRequirements(PhotonSubsystem.getInstance());
+    id = -1;
   }
 
   // Called when the command is initially scheduled.

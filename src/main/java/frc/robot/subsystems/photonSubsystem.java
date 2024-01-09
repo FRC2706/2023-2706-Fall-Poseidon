@@ -7,6 +7,9 @@ package frc.robot.subsystems;
 //imports
 import java.util.List;
 import java.util.Optional;
+import java.lang.Math;
+import java.lang.annotation.Target;
+
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import org.photonvision.targeting.TargetCorner;
@@ -22,11 +25,20 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class PhotonSubsystem extends SubsystemBase {
 
   //constants
+  private double[] APRIL_HEIGHTS = {3.0,4.0,1.7,2.4};
+  private double CAMERA_HEIGHT = 1;
+  private double IMAGE_HEIGHT = 100.0;
+  private double IMAGE_WIDTH = 640.0;
+  private double CAMERA_FOV_YAW = 70.0;
+  private double CAMERA_FOV_PITCH = 100.0;
+  private Rotation2d CAMERA_PITCH = Rotation2d.fromDegrees(100);
+
+
   //height of april = 1 foot 3 and 1/4 to bottom of black from floor
   private double EXAMPLE_SIZE_HEIGHT = 104.6;
   private double EXAMPLE_DISTANCE = 1.000;
-  private double CAMERA_FOV = 70.0;
-  private double IMAGE_WIDTH = 640.0;
+
+
   //x is forwards, y is sideways with +y being left, rotation probobly if + left too
   private Pose2d cameraOffset = new Pose2d(new Translation2d(0.23,0.3), Rotation2d.fromDegrees(0));
   //networkTableName
@@ -97,31 +109,56 @@ public class PhotonSubsystem extends SubsystemBase {
     return(data == maxData);
   }
 
+  private TargetCorner tagXY(List<TargetCorner> corners) {
+    double averageX = 0;
+    double averageY = 0;
+    for (TargetCorner c : corners){
+      averageX += c.x;
+      averageY += c.y;
+    }
+    averageX/=4;
+    averageY/=4;
+    return new TargetCorner(averageX, averageY);
+  }
+
+  private double range(double y) {
+    y = (IMAGE_HEIGHT/2-y)*CAMERA_FOV_PITCH/IMAGE_HEIGHT;
+    y = Math.toRadians(y);
+    y += CAMERA_PITCH.getRadians();
+    return (APRIL_HEIGHTS[id]-CAMERA_HEIGHT)/Math.tan(y);
+  }
+  
   private double range(List<TargetCorner> corners) {
     double heightSize = (corners.get(0).y - corners.get(3).y + corners.get(1).y - corners.get(2).y)/2;
     return(EXAMPLE_SIZE_HEIGHT*EXAMPLE_DISTANCE/heightSize);
   }
 
-  private rotation2D yaw(List<TargetCorner> corners) {
-    double targetx = 0;
-    //calculating how far april tag is from center of camera field(not center of robot)
-    for (int i = 0; i<4; i++){
-      targetx += corners.get(i).x;
-    }
-
-    //4 corners, 
-    targetx = (IMAGE_WIDTH/2-targetx/4)*CAMERA_FOV/IMAGE_WIDTH;
-
-    Rotation2d yaw = Rotation2d.fromDegrees(targetx); 
+  private rotation2D yaw(double x) {
+    x = (IMAGE_WIDTH/2-x)*CAMERA_FOV_YAW/IMAGE_WIDTH;
+    Rotation2d yaw = Rotation2d.fromDegrees(x); 
   }
 
-  private Translation2d convertToField(double range, Rotation2D yaw, Pose2D odometryPose) {
+  private PhotonTrackedTarget biggestTarget(List<PhotonTrackedTarget> targets) {
+    PhotonTrackedTarget biggestTarget;
+    double tallest = 0;
+    for (PhotonTrackedTarget t:targets) {
+      List<TargetCorner> corners = t.getDetectedCorners();
+      double sizeY = corners.get(1).y-corners.get(3).y;
+      if (sizeY > tallest) {
+        tallest = sizeY;
+        biggestTarget = t;
+      }
+    }
+    return biggestTarget;
+  }
+
+  private Pose2d convertToField(double range, Rotation2d yaw, Pose2d odometryPose) {
     Rotation2d fieldOrientedTarget = yaw.rotateBy(odometryPose.getRotation());
     Translation2d visionXY = new Translation2d(range, yaw);
     Translation2d robotRotated = visionXY.rotateBy(cameraOffset.getRotation());
     Translation2d robotToTargetRELATIVE = robotRotated.plus(cameraOffset.getTranslation());
     Translation2d robotToTarget = robotToTargetRELATIVE.rotateBy(odometryPose.getRotation());
-    return(robotToTarget.plus(odometryPose.getTranslation()));
+    return new Pose2d(robotToTarget.plus(odometryPose.getTranslation()), fieldOrientedTarget);
   }
 
   @Override
@@ -141,6 +178,7 @@ public class PhotonSubsystem extends SubsystemBase {
       //currently chooses lowest id if sees two april tags
       if (id == -1){
         target = result.getBestTarget();
+        id = target.getFiducialId();
       } else{
         List<PhotonTrackedTarget> allTargets = result.getTargets();
         for (PhotonTrackedTarget t:allTargets){
@@ -154,16 +192,18 @@ public class PhotonSubsystem extends SubsystemBase {
         }
       }
       
-      //calculate distance
+      //get tag info
       List<TargetCorner> corners = target.getDetectedCorners();
-      double range = range(corners);
+      TargetCorner tag = tagXY(corners);
+      //calculate range
+      double range = range(tag.y);
       //calculate yaw
-      rotation2D yaw = yaw(corners);
+      Rotation2d yaw = yaw(tag.x);
       //convert to field quordinates
-      Translation2d fieldToTarget = convertToField(range, yaw, odometryPose);
+      Pose2d fieldToTarget = convertToField(range, yaw, odometryPose);
       //update rolling averages
-      targetPos = new Translation2d(filterX.calculate(feildToTarget.getX()),filterY.calculate(feildToTarget.getY()));
-      targetRotation = Rotation2d.fromDegrees(filteryaw.calculate(fieldOrientedTarget.getDegrees()));
+      targetPos = new Translation2d(filterX.calculate(fieldToTarget.getX()),filterY.calculate(fieldToTarget.getY()));
+      targetRotation = Rotation2d.fromDegrees(filteryaw.calculate(fieldToTarget.getRotation().getDegrees()));
       data ++;
 
       //publish to networktables
