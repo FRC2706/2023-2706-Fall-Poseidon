@@ -1,9 +1,11 @@
 package frc.robot.subsystems;
 
+import static frc.lib.lib2706.ErrorCheck.configureSpark;
+import static frc.lib.lib2706.ErrorCheck.errSpark;
+
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.ControlType;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 
@@ -15,15 +17,12 @@ import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.PubSubOption;
 import frc.lib.lib2706.UpdateSimpleFeedforward;
 import frc.lib.lib3512.config.SwerveModuleConstants;
 import frc.lib.lib3512.util.CANCoderUtil;
-import frc.lib.lib3512.util.CANSparkMaxUtil;
 import frc.lib.lib3512.util.CANCoderUtil.CCUsage;
+import frc.lib.lib3512.util.CANSparkMaxUtil;
 import frc.lib.lib3512.util.CANSparkMaxUtil.Usage;
-import static frc.lib.lib2706.ErrorCheck.configureSpark;
-import static frc.lib.lib2706.ErrorCheck.errSpark;
 import frc.robot.Config;
 import frc.robot.Robot;
 
@@ -97,7 +96,7 @@ public class SwerveModule {
     speedError = swerveModuleTable.getDoubleTopic("Speed error (mps)").publish(PubSubOption.periodic(0.02));
     angleError = swerveModuleTable.getDoubleTopic("Angle error (deg)").publish(PubSubOption.periodic(0.02));
     entryAngleOffset = swerveModuleTable.getDoubleTopic("Angle Offset").getEntry(moduleNumber);
-
+    resetToAbsolute()
     burnFlash();
   }
 
