@@ -191,12 +191,6 @@ public class SwerveSubsystem extends SubsystemBase {
 
   // Swerve actual driving methods
   public void resetDriveToPose() {
-    // reset current positions
-    /*
-    get current orientation
-    get change in rotation and time delay
-    get anticipated orientation by adding change in rotation to current orientation??
-    */
     pidControlX.reset(getPose().getX(),getFieldRelativeSpeeds().vxMetersPerSecond);
     pidControlY.reset(getPose().getY(),getFieldRelativeSpeeds().vyMetersPerSecond);
     pidControlRotation.reset(getPose().getRotation().getRadians());
