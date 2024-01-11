@@ -3,6 +3,9 @@ package frc.robot.subsystems;
 import static frc.lib.lib2706.ErrorCheck.configureSpark;
 import static frc.lib.lib2706.ErrorCheck.errSpark;
 
+import static frc.lib.lib2706.ErrorCheck.configureSpark;
+import static frc.lib.lib2706.ErrorCheck.errSpark;
+
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkLowLevel.MotorType;
@@ -23,6 +26,7 @@ import frc.lib.lib2706.UpdateSimpleFeedforward;
 import frc.lib.lib3512.config.SwerveModuleConstants;
 import frc.lib.lib3512.util.CANCoderUtil;
 import frc.lib.lib3512.util.CANCoderUtil.CCUsage;
+import frc.lib.lib3512.util.CANSparkMaxUtil;
 import frc.lib.lib3512.util.CANSparkMaxUtil;
 import frc.lib.lib3512.util.CANSparkMaxUtil.Usage;
 import frc.robot.Config;
@@ -98,7 +102,7 @@ public class SwerveModule {
     speedError = swerveModuleTable.getDoubleTopic("Speed error (mps)").publish(PubSubOption.periodic(0.02));
     angleError = swerveModuleTable.getDoubleTopic("Angle error (deg)").publish(PubSubOption.periodic(0.02));
     entryAngleOffset = swerveModuleTable.getDoubleTopic("Angle Offset").getEntry(moduleNumber);
-
+    resetToAbsolute();
     burnFlash();
   }
 

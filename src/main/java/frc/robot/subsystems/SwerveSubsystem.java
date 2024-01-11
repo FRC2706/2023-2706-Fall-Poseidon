@@ -124,7 +124,7 @@ public class SwerveSubsystem extends SubsystemBase {
     Config.Swerve.swerveKinematics.toSwerveModuleStates(
       ChassisSpeeds.discretize(
         fieldRelative ? 
-            ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getYaw()) :
+            ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getHeading()) :
             speeds, 0.02
       )
     );
@@ -196,7 +196,6 @@ public class SwerveSubsystem extends SubsystemBase {
 
   // Swerve actual driving methods
   public void resetDriveToPose() {
-    // reset current positions
     pidControlX.reset(getPose().getX(),getFieldRelativeSpeeds().vxMetersPerSecond);
     pidControlY.reset(getPose().getY(),getFieldRelativeSpeeds().vyMetersPerSecond);
     pidControlRotation.reset(getPose().getRotation().getRadians(),getFieldRelativeSpeeds().omegaRadiansPerSecond);
@@ -239,6 +238,9 @@ public class SwerveSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    for (SwerveModule mod : mSwerveMods) {
+        mod.periodic();
+    }
     SwerveModulePosition[] tempGetPositions = getPositions();
     SwerveModuleState[] tempGetStates = getStates();
     swerveOdometry.update(getYaw(), tempGetPositions);
@@ -296,8 +298,6 @@ public class SwerveSubsystem extends SubsystemBase {
   {
     double sumVelocity = 0;
     for (SwerveModule mod : mSwerveMods) {
-      mod.periodic();
-      
       sumVelocity += Math.abs(mod.getState().speedMetersPerSecond);
     }
 
