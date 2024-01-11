@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 
 public final class Config {
@@ -35,6 +36,7 @@ public final class Config {
    */
   private static int robotId = -1;
 
+  private static final int SIMULATION_ID = 1;
   /**
    * Returns one of the values passed based on the robot ID
    *
@@ -60,11 +62,16 @@ public final class Config {
   public static int getRobotId() {
 
     if (robotId < 0) {
-      // Set to the ID of the 2023 Competition robot if the simulation is running
-      if (RobotBase.isSimulation()) {
+      // Backup in case the FMS is attached, force to comp robot
+      if (DriverStation.isFMSAttached()) {
         robotId = 0;
+      }
 
-        // Not simulation so read the file on the roborio for it's robot id.
+      // Set the Id to the simulation if simulating
+      else if (RobotBase.isSimulation()) {
+        robotId = SIMULATION_ID;
+
+      // Not simulation, read the file on the roborio for it's robot id.
       } else {
         try (BufferedReader reader = Files.newBufferedReader(ROBOT_ID_LOC)) {
           robotId = Integer.parseInt(reader.readLine());
@@ -80,18 +87,11 @@ public final class Config {
   /**
    * ROBOT IDs
    * 
-   * ID 0: Poseidon (Charged Up)
-   * ID 1: Clutch (Rapid React)
-   * ID 2: Beetle (Small Talon tank drive)
-   * ID 3: Cosmobot (Deep Space)
-   * 
-   * ...
-   * 
-   * 
+   * ID 0: Competition Robot (Crescendo) (NEEDS UPDATE ON robot.conf)
+   * ID 1: Simulation of Comp Robot (Crescendo in Simulation)
+   * ID 2: Poseidon (Charged Up) (NEEDS UPDATE ON robot.conf)
+   * ID 3: Clutch (Rapid React) (NEEDS UPDATE ON robot.conf)
    **/
-
-
-
 
    /** ADD CONSTANTS BELOW THIS LINE */
 }
