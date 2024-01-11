@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix.sensors.PigeonIMU;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -100,6 +101,7 @@ public class SwerveSubsystem extends SubsystemBase {
             0.4, // Drive base radius in meters. Distance from robot center to furthest module.
             new ReplanningConfig() // Default path replanning config. See the API for the options here
         ),
+        () -> {return true;},
         this // Reference to this subsystem to set requirements
     );
 
@@ -178,7 +180,7 @@ public class SwerveSubsystem extends SubsystemBase {
   public Command setOdometryCommand(Pose2d pose) {
     return Commands.runOnce(() -> resetOdometry(pose));
   }
-  public Command lockWheelsInX() {
+  public Command getLockWheelsInXCommand() {
     return Commands.run(() -> setModuleStates(
       new SwerveModuleState[]{
         new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
@@ -188,13 +190,16 @@ public class SwerveSubsystem extends SubsystemBase {
       }, true)
     );
   }
+  public Command getDriveToPoseCommand(Pose2d desiredPose) {
+    return runOnce(() -> resetDriveToPose()).andThen(run(() -> driveToPose(desiredPose)));
+  }
 
   // Swerve actual driving methods
   public void resetDriveToPose() {
     // reset current positions
     pidControlX.reset(getPose().getX(),getFieldRelativeSpeeds().vxMetersPerSecond);
     pidControlY.reset(getPose().getY(),getFieldRelativeSpeeds().vyMetersPerSecond);
-    pidControlRotation.reset(getPose().getRotation().getRadians());
+    pidControlRotation.reset(getPose().getRotation().getRadians(),getFieldRelativeSpeeds().omegaRadiansPerSecond);
   }
 
   public void driveToPose(Pose2d pose) {
@@ -306,4 +311,5 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
   }
+
 }

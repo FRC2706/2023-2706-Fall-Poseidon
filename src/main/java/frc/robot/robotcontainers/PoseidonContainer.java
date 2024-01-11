@@ -62,7 +62,7 @@ public class PoseidonContainer extends RobotContainer {
   private void configureButtonBindings() {
     /* Driver Controls */
     driver.start().onTrue(SwerveSubsystem.getInstance().setHeadingCommand(new Rotation2d(0)));
-    driver.back().whileTrue(SwerveSubsystem.getInstance().lockWheelsInX());
+    driver.back().whileTrue(SwerveSubsystem.getInstance().getLockWheelsInXCommand());
 
     //ArmPneumaticsSubsystem commands
     // X - Remove Top Brake
